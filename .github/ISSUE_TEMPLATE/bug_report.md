@@ -1,7 +1,7 @@
 ---
 name: 버그 리포트
 about: 버그를 제보해주세요
-title: "[BUG] "
+title: "⛑️[BUG] "
 labels: bug
 assignees: ''
 ---
