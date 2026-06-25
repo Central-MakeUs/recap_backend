@@ -17,6 +17,8 @@ spring:
       hibernate:
         dialect: ${DB_DIALECT}
         format_sql: true
+        jdbc:
+          time_zone: UTC # 로컬 개발 환경과 운영 서버 환영(UTC)간의 시간 불일치 예방
 
 server:
   port: 8080
