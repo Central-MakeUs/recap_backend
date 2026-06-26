@@ -35,4 +35,4 @@ springdoc:
 
 swagger:
   server:
-    url: https://recap.duckdns.org
+    url: https://re-cap.duckdns.org
