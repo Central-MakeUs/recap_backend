@@ -41,7 +41,7 @@ jobs:
           context: .
           push: true
           platforms: linux/arm64
-          tags: ghcr.io/${{ github.repository_owner }}/recap-api:latest
+          tags: ghcr.io/${{ env.OWNER }}/recap-api:latest
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1
