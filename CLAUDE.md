@@ -17,7 +17,7 @@
 - 엔티티는 @NoArgsConstructor(PROTECTED) + 정적 팩토리 메서드 패턴 유지.
 
 ## 커밋/PR (RECAP 기존 컨벤션)
-- 커밋: `type/#이슈번호: 한글 제목` (feat, fix, docs, refactor, chore ...)
+- 커밋: `type: 한글 제목(#이슈번호)` (feat, fix, docs, refactor, chore ...)
 - 브랜치: `type#이슈번호`
 - PR 본문은 diff와 문서에 있는 사실만 쓴다. 하지 않은 테스트를 통과로 쓰지 않는다.
 
