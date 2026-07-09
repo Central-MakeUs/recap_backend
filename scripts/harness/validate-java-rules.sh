@@ -89,6 +89,28 @@ if [[ "$BASENAME" == *Converter.java ]]; then
 fi
 
 # ──────────────────────────────────────────────
+# 규칙 6: 메서드 배치 순서 (private은 맨 아래로)
+# → domain-design-principles.md #7
+# 완벽한 파서가 아니라 휴리스틱이다: "private 메서드가 한 번이라도
+# 나온 뒤에 public 메서드가 다시 나오면" 위반으로 본다.
+# ──────────────────────────────────────────────
+if [[ "$FILE" == *"/domain/"* || "$FILE" == *"/service/"* ]]; then
+    ORDER_VIOLATION=$(awk '
+        /^\s*(public|protected|private)(\s+static)?\s+[A-Za-z_][A-Za-z0-9_<>\[\],. ]*\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(/ {
+            if ($0 ~ /private/) {
+                seen_private = 1
+            } else if ($0 ~ /public/ && seen_private == 1) {
+                print NR": "$0" ← private 메서드 이후에 public 메서드 발견 (private은 맨 아래로)"
+            }
+        }
+    ' "$FILE")
+    if [[ -n "$ORDER_VIOLATION" ]]; then
+        echo "⚠️  [규칙6] 메서드 배치 순서 의심 (휴리스틱 — 오탐 가능, 직접 확인 필요)"
+        echo "$ORDER_VIOLATION" | sed 's/^/   /'
+    fi
+fi
+
+# ──────────────────────────────────────────────
 # 결과
 # ──────────────────────────────────────────────
 if [[ $ERRORS -gt 0 ]]; then
