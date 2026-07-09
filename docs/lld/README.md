@@ -11,4 +11,4 @@
 
 | 번호 | 제목 | 상태 | 날짜 |
 | --- | --- | --- | --- |
-| [LLD-0001](LLD-0001-oauth-social-login.md) | 카카오/Apple 소셜 로그인 | Accepted | 2026-07-07 |
+| [LLD-0001](LLD-0001-oauth-social-login.md) | 카카오/Apple 소셜 로그인 | Accepted (개정) | 2026-07-10 (최초 2026-07-07) |
