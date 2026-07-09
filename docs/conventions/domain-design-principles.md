@@ -24,19 +24,19 @@
 ```java
 class User {
 
-    public static User createByDevice(String deviceId, Platform platform) {
-        validateDeviceId(deviceId);
-        User user = new User();
-        user.deviceId = deviceId;
-        user.platform = platform;
-        return user;
-    }
+  public static User createByDevice(String deviceId, Platform platform) {
+    validateDeviceId(deviceId);
+    User user = new User();
+    user.deviceId = deviceId;
+    user.platform = platform;
+    return user;
+  }
 
-    private static void validateDeviceId(String deviceId) {
-        if (deviceId == null || deviceId.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "deviceId는 필수입니다.");
-        }
+  private static void validateDeviceId(String deviceId) {
+    if (deviceId == null || deviceId.isBlank()) {
+      throw new BusinessException(ErrorCode.INVALID_INPUT, "deviceId는 필수입니다.");
     }
+  }
 }
 ```
 
@@ -53,14 +53,14 @@ class User {
 ```java
 class User {
 
-    public void linkOauth(String email, String oauthProvider, String oauthId) {
-        if (this.oauthId != null) {
-            throw new BusinessException(ErrorCode.ALREADY_LINKED_OAUTH);
-        }
-        this.email = email;
-        this.oauthProvider = oauthProvider;
-        this.oauthId = oauthId;
+  public void linkOauth(String email, String oauthProvider, String oauthId) {
+    if (this.oauthId != null) {
+      throw new BusinessException(ErrorCode.ALREADY_LINKED_OAUTH);
     }
+    this.email = email;
+    this.oauthProvider = oauthProvider;
+    this.oauthId = oauthId;
+  }
 }
 ```
 
@@ -72,19 +72,19 @@ class User {
 ```java
 class Example {
 
-    // 지양
-    void withoutTellDontAsk() {
-        if (refreshToken.getExpiresAt().isAfter(Instant.now()) && !refreshToken.isRevoked()) {
-            // 로그인 유지 처리
-        }
+  // 지양
+  void withoutTellDontAsk() {
+    if (refreshToken.getExpiresAt().isAfter(Instant.now()) && !refreshToken.isRevoked()) {
+      // 로그인 유지 처리
     }
+  }
 
-    // 지향 — 이미 RefreshToken.isUsable()이 이 형태로 되어 있음, 이 패턴을 표준으로 삼는다
-    void withTellDontAsk() {
-        if (refreshToken.isUsable()) {
-            // 로그인 유지 처리
-        }
+  // 지향 — 이미 RefreshToken.isUsable()이 이 형태로 되어 있음, 이 패턴을 표준으로 삼는다
+  void withTellDontAsk() {
+    if (refreshToken.isUsable()) {
+      // 로그인 유지 처리
     }
+  }
 }
 ```
 
@@ -109,16 +109,16 @@ class Example {
 ```java
 // from() — 엔티티 변환
 record UserSummaryResponse(Long id, Platform platform) {
-    static UserSummaryResponse from(User user) {
-        return new UserSummaryResponse(user.getId(), user.getPlatform());
-    }
+  static UserSummaryResponse from(User user) {
+    return new UserSummaryResponse(user.getId(), user.getPlatform());
+  }
 }
 
 // of() — 값 조합
 record TokenResponse(String accessToken, String refreshToken, Instant accessTokenExpiresAt) {
-    static TokenResponse of(String accessToken, String refreshToken, Instant expiresAt) {
-        return new TokenResponse(accessToken, refreshToken, expiresAt);
-    }
+  static TokenResponse of(String accessToken, String refreshToken, Instant expiresAt) {
+    return new TokenResponse(accessToken, refreshToken, expiresAt);
+  }
 }
 ```
 
@@ -132,6 +132,24 @@ record TokenResponse(String accessToken, String refreshToken, Instant accessToke
   무리하게 파사드를 도입하지 않고, 조합이 3개 이상으로 늘어나는 시점에
   파사드 도입을 재검토한다 (YAGNI — 지금 단계는 서비스 하나가 오케스트레이션해도 무방).
 
+## 7. 메서드 배치 순서
+
+클래스 위에서 아래로 읽었을 때 "어떻게 쓰는지"가 먼저 나오고
+"어떻게 구현됐는지"가 나중에 나오도록, **가시성 기준으로 그룹핑**한다.
+
+```
+1. static final 상수
+2. 인스턴스 필드
+3. 생성자 (private/protected)
+4. public static 팩토리 메서드
+5. public 인스턴스 메서드 (도메인 행위: updateInfo(), revoke() 등)
+6. public 조회 메서드 (isX() 등 Tell-Don't-Ask 메서드)
+7. private/protected 헬퍼 메서드 — 항상 맨 아래에 모아둔다
+```
+
+private 메서드가 여기저기 흩어져 있거나, public 메서드 사이에 private
+메서드가 끼어 있으면 위반이다.
+
 ## 체크리스트 (구현 시 자가 점검)
 
 - [ ] 이 엔티티는 `new`로 직접 생성 가능한가? → 가능하면 위반
@@ -139,6 +157,8 @@ record TokenResponse(String accessToken, String refreshToken, Instant accessToke
 - [ ] 원시 예외(`IllegalStateException` 등)를 도메인 로직에서 던지고 있는가?
 - [ ] 서비스 레이어에 `new XxxResponse(` 형태가 남아있는가?
 - [ ] Controller가 Repository를 직접 참조하는가?
+- [ ] private 메서드가 public 메서드들 사이에 끼어 있지 않고 맨 아래에
+  모여 있는가?
 
 ## 자동 검증
 
@@ -146,7 +166,9 @@ record TokenResponse(String accessToken, String refreshToken, Instant accessToke
 확인할 수 있다. 이 스크립트는 `.agents/skills` 문서들과 별개다 — 저것들은
 "AI가 어떤 절차를 밟는가"를 다루고, 이 스크립트는 "작성된 코드가 규칙을
 지켰는가"를 다룬다. 성격이 다른 도구라 하네스의 "문서 기반" 원칙과 상충하지
-않는다.
+않는다. 메서드 배치 순서(7번 규칙)는 완벽한 파서가 아니라 휴리스틱
+검사이므로("private 메서드가 한 번이라도 나오면 그 뒤엔 public이 없어야
+한다") 애매한 케이스는 리뷰어가 직접 판단한다.
 
 ```bash
 bash scripts/harness/validate-java-rules.sh src/main/java/cmc/recap/auth/domain/RefreshToken.java
