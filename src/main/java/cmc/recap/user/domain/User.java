@@ -35,9 +35,6 @@ public class User extends BaseTimeEntity {
     @Column(name = "fcm_token")
     private String fcmToken;
 
-    @Column(name = "email")
-    private String email;
-
     @Column(name = "oauth_provider")
     private String oauthProvider;
 
@@ -60,11 +57,10 @@ public class User extends BaseTimeEntity {
         }
     }
 
-    public void linkOauth(String email, String oauthProvider, String oauthId) {
+    public void linkOauth(String oauthProvider, String oauthId) {
         if (this.oauthId != null) {
             throw new BusinessException(ErrorCode.ALREADY_LINKED_OAUTH);
         }
-        this.email = email;
         this.oauthProvider = oauthProvider;
         this.oauthId = oauthId;
     }

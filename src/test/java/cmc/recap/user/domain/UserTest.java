@@ -37,9 +37,9 @@ class UserTest {
     @DisplayName("이미 OAuth가 연결된 유저를 다시 연결하면 예외를 던진다")
     void 이미_연결된_OAuth를_재연결하면_예외를_던진다() {
         User user = User.createByDevice("device-1", Platform.IOS);
-        user.linkOauth("email@test.com", "kakao", "oauth-1");
+        user.linkOauth("kakao", "oauth-1");
 
-        assertThatThrownBy(() -> user.linkOauth("email2@test.com", "apple", "oauth-2"))
+        assertThatThrownBy(() -> user.linkOauth("apple", "oauth-2"))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.ALREADY_LINKED_OAUTH);
