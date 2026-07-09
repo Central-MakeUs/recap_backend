@@ -51,12 +51,6 @@ public class User extends BaseTimeEntity {
         return new User(deviceId, platform);
     }
 
-    private static void validateDeviceId(String deviceId) {
-        if (deviceId == null || deviceId.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "deviceId는 필수입니다.");
-        }
-    }
-
     public void linkOauth(String oauthProvider, String oauthId) {
         if (this.oauthId != null) {
             throw new BusinessException(ErrorCode.ALREADY_LINKED_OAUTH);
@@ -67,5 +61,11 @@ public class User extends BaseTimeEntity {
 
     public void updateFcmToken(String fcmToken) {
         this.fcmToken = fcmToken;
+    }
+
+    private static void validateDeviceId(String deviceId) {
+        if (deviceId == null || deviceId.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "deviceId는 필수입니다.");
+        }
     }
 }
