@@ -18,6 +18,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -25,16 +27,16 @@ public class AppleOAuthProvider implements OAuthProvider {
 
     private static final String APPLE_ISSUER = "https://appleid.apple.com";
     private static final String APPLE_JWKS_URL = "https://appleid.apple.com/auth/keys";
-    private static final String VALID_APPLE_AUDIENCE = "com.cmc.recap"; // iOS Bundle ID
 
     private final ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
 
-    public AppleOAuthProvider() {
-        this(JWKSourceBuilder.create(toUrl(APPLE_JWKS_URL)).build());
+    @Autowired
+    public AppleOAuthProvider(@Value("${apple.bundle-id}") String bundleId) {
+        this(bundleId, JWKSourceBuilder.create(toUrl(APPLE_JWKS_URL)).build());
     }
 
-    AppleOAuthProvider(JWKSource<SecurityContext> jwkSource) {
-        this.jwtProcessor = createJwtProcessor(jwkSource);
+    AppleOAuthProvider(String bundleId, JWKSource<SecurityContext> jwkSource) {
+        this.jwtProcessor = createJwtProcessor(bundleId, jwkSource);
     }
 
     @Override
@@ -52,13 +54,14 @@ public class AppleOAuthProvider implements OAuthProvider {
         return "apple";
     }
 
-    private static ConfigurableJWTProcessor<SecurityContext> createJwtProcessor(JWKSource<SecurityContext> jwkSource) {
+    private static ConfigurableJWTProcessor<SecurityContext> createJwtProcessor(
+            String bundleId, JWKSource<SecurityContext> jwkSource) {
         JWSKeySelector<SecurityContext> keySelector =
                 new JWSVerificationKeySelector<>(JWSAlgorithm.RS256, jwkSource);
 
         JWTClaimsSet exactMatchClaims = new JWTClaimsSet.Builder()
                 .issuer(APPLE_ISSUER)
-                .audience(VALID_APPLE_AUDIENCE)
+                .audience(bundleId)
                 .build();
 
         DefaultJWTProcessor<SecurityContext> processor = new DefaultJWTProcessor<>();

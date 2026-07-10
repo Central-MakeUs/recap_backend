@@ -37,3 +37,6 @@ jwt:
   secret: ${JWT_SECRET:local-dev-only-jwt-secret-please-do-not-use-in-prod-32b}
   access-token-expiry: ${JWT_ACCESS_TOKEN_EXPIRY:30m}
   refresh-token-expiry: ${JWT_REFRESH_TOKEN_EXPIRY:14d}
+
+apple:
+  bundle-id: ${APPLE_BUNDLE_ID:com.cmc.recap}

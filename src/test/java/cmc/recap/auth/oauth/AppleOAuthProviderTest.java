@@ -35,7 +35,7 @@ class AppleOAuthProviderTest {
     void setUp() throws JOSEException {
         rsaKey = new RSAKeyGenerator(2048).keyID("test-key").generate();
         JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(new JWKSet(rsaKey.toPublicJWK()));
-        appleOAuthProvider = new AppleOAuthProvider(jwkSource);
+        appleOAuthProvider = new AppleOAuthProvider(AUDIENCE, jwkSource);
     }
 
     @Test
