@@ -2,6 +2,7 @@ package cmc.recap.global.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -37,6 +38,17 @@ class JwtProviderTest {
         String token = jwtProvider.issueRefreshToken(1L);
 
         assertThat(jwtProvider.getUserId(token)).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("Access 토큰을 발급하면 만료 시각이 발급 시각으로부터 accessTokenExpiry만큼 뒤다")
+    void Access_토큰을_발급하면_만료_시각이_발급_시각으로부터_accessTokenExpiry만큼_뒤다() {
+        Instant beforeIssue = Instant.now();
+        String token = jwtProvider.issueAccessToken(1L);
+
+        Instant expiration = jwtProvider.getExpiration(token);
+
+        assertThat(expiration).isCloseTo(beforeIssue.plus(ACCESS_TOKEN_EXPIRY), within(Duration.ofSeconds(2)));
     }
 
     @Test

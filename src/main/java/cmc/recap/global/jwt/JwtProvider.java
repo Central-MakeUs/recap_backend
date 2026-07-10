@@ -40,6 +40,10 @@ public class JwtProvider {
         return Long.valueOf(parseClaims(token).getSubject());
     }
 
+    public Instant getExpiration(String token) {
+        return parseClaims(token).getExpiration().toInstant();
+    }
+
     private String issueToken(Long userId, Duration expiry) {
         Instant now = Instant.now();
         return Jwts.builder()
