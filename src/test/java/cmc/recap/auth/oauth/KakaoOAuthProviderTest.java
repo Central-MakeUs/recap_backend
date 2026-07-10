@@ -58,6 +58,6 @@ class KakaoOAuthProviderTest {
     @Test
     @DisplayName("providerName은 kakao를 반환한다")
     void providerName은_kakao를_반환한다() {
-        assertThat(kakaoOAuthProvider.providerName()).isEqualTo("kakao");
+        assertThat(kakaoOAuthProvider.providerName()).isEqualTo(OAuthProviderType.KAKAO.getCode());
     }
 }

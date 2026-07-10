@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import cmc.recap.auth.dto.response.TokenResponse;
+import cmc.recap.auth.oauth.OAuthProviderType;
 import cmc.recap.auth.service.AuthService;
 import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
@@ -34,10 +35,10 @@ class AuthControllerTest {
     @Test
     @DisplayName("유효한 로그인 요청이면 200과 토큰을 응답한다")
     void 유효한_로그인_요청이면_200과_토큰을_응답한다() throws Exception {
-        given(authService.login(eq("kakao"), any()))
+        given(authService.login(eq(OAuthProviderType.KAKAO.getCode()), any()))
                 .willReturn(TokenResponse.of("access", "refresh", Instant.now().plusSeconds(1800)));
 
-        mockMvc.perform(post("/api/v1/auth/oauth/kakao/login")
+        mockMvc.perform(post("/api/v1/auth/oauth/" + OAuthProviderType.KAKAO.getCode() + "/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"deviceId":"device-1","providerToken":"token","platform":"IOS"}
@@ -50,7 +51,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("deviceId가 비어 있으면 400을 응답한다")
     void deviceId가_비어_있으면_400을_응답한다() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/oauth/kakao/login")
+        mockMvc.perform(post("/api/v1/auth/oauth/" + OAuthProviderType.KAKAO.getCode() + "/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"deviceId":"","providerToken":"token","platform":"IOS"}

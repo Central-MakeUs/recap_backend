@@ -97,7 +97,7 @@ class AppleOAuthProviderTest {
     @Test
     @DisplayName("providerName은 apple을 반환한다")
     void providerName은_apple을_반환한다() {
-        assertThat(appleOAuthProvider.providerName()).isEqualTo("apple");
+        assertThat(appleOAuthProvider.providerName()).isEqualTo(OAuthProviderType.APPLE.getCode());
     }
 
     private JWTClaimsSet.Builder validClaimsBuilder() {

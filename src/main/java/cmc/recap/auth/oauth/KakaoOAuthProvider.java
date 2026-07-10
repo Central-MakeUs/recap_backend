@@ -42,7 +42,7 @@ public class KakaoOAuthProvider implements OAuthProvider {
 
     @Override
     public String providerName() {
-        return "kakao";
+        return OAuthProviderType.KAKAO.getCode();
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

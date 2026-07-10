@@ -14,6 +14,7 @@ import cmc.recap.auth.dto.request.OAuthLoginRequest;
 import cmc.recap.auth.dto.request.TokenRefreshRequest;
 import cmc.recap.auth.dto.response.TokenResponse;
 import cmc.recap.auth.oauth.OAuthProvider;
+import cmc.recap.auth.oauth.OAuthProviderType;
 import cmc.recap.auth.oauth.OAuthUserInfo;
 import cmc.recap.auth.repository.RefreshTokenRepository;
 import cmc.recap.global.exception.ErrorCode;
@@ -57,9 +58,9 @@ class AuthServiceTest {
     @DisplayName("처음 보는 deviceId와 oauthId면 신규 유저를 만들고 연결한다")
     void 처음_보는_deviceId와_oauthId면_신규_유저를_만들고_연결한다() {
         OAuthLoginRequest request = new OAuthLoginRequest("device-1", "provider-token", Platform.IOS);
-        given(kakaoProvider.providerName()).willReturn("kakao");
+        given(kakaoProvider.providerName()).willReturn(OAuthProviderType.KAKAO.getCode());
         given(kakaoProvider.verify("provider-token")).willReturn(new OAuthUserInfo("oauth-1"));
-        given(userRepository.findByOauthProviderAndOauthId("kakao", "oauth-1")).willReturn(Optional.empty());
+        given(userRepository.findByOauthProviderAndOauthId(OAuthProviderType.KAKAO.getCode(), "oauth-1")).willReturn(Optional.empty());
         given(userRepository.findByDeviceId("device-1")).willReturn(Optional.empty());
         given(userRepository.save(any(User.class))).willAnswer(invocation -> invocation.getArgument(0));
         given(jwtProvider.issueAccessToken(any())).willReturn("access-token");
@@ -67,7 +68,7 @@ class AuthServiceTest {
         given(jwtProvider.getExpiration("access-token")).willReturn(Instant.now().plusSeconds(1800));
         given(jwtProvider.getExpiration("refresh-token")).willReturn(Instant.now().plusSeconds(1209600));
 
-        TokenResponse response = authService.login("kakao", request);
+        TokenResponse response = authService.login(OAuthProviderType.KAKAO.getCode(), request);
 
         assertThat(response.accessToken()).isEqualTo("access-token");
         assertThat(response.refreshToken()).isEqualTo("refresh-token");
@@ -78,16 +79,16 @@ class AuthServiceTest {
     @DisplayName("이미 해당 oauthId로 연결된 유저가 있으면 그 유저로 로그인한다")
     void 이미_해당_oauthId로_연결된_유저가_있으면_그_유저로_로그인한다() {
         User existingUser = User.createByDevice("device-1", Platform.IOS);
-        existingUser.linkOauth("kakao", "oauth-1");
+        existingUser.linkOauth(OAuthProviderType.KAKAO.getCode(), "oauth-1");
         OAuthLoginRequest request = new OAuthLoginRequest("device-2", "provider-token", Platform.ANDROID);
-        given(kakaoProvider.providerName()).willReturn("kakao");
+        given(kakaoProvider.providerName()).willReturn(OAuthProviderType.KAKAO.getCode());
         given(kakaoProvider.verify("provider-token")).willReturn(new OAuthUserInfo("oauth-1"));
-        given(userRepository.findByOauthProviderAndOauthId("kakao", "oauth-1")).willReturn(Optional.of(existingUser));
+        given(userRepository.findByOauthProviderAndOauthId(OAuthProviderType.KAKAO.getCode(), "oauth-1")).willReturn(Optional.of(existingUser));
         given(jwtProvider.issueAccessToken(any())).willReturn("access-token");
         given(jwtProvider.issueRefreshToken(any())).willReturn("refresh-token");
         given(jwtProvider.getExpiration(any())).willReturn(Instant.now().plusSeconds(1800));
 
-        authService.login("kakao", request);
+        authService.login(OAuthProviderType.KAKAO.getCode(), request);
 
         verify(userRepository, never()).findByDeviceId(any());
     }
@@ -97,18 +98,18 @@ class AuthServiceTest {
     void 기존_익명_유저의_deviceId로_로그인하면_그_유저에_OAuth를_병합한다() {
         User anonymousUser = User.createByDevice("device-1", Platform.IOS);
         OAuthLoginRequest request = new OAuthLoginRequest("device-1", "provider-token", Platform.IOS);
-        given(kakaoProvider.providerName()).willReturn("kakao");
+        given(kakaoProvider.providerName()).willReturn(OAuthProviderType.KAKAO.getCode());
         given(kakaoProvider.verify("provider-token")).willReturn(new OAuthUserInfo("oauth-1"));
-        given(userRepository.findByOauthProviderAndOauthId("kakao", "oauth-1")).willReturn(Optional.empty());
+        given(userRepository.findByOauthProviderAndOauthId(OAuthProviderType.KAKAO.getCode(), "oauth-1")).willReturn(Optional.empty());
         given(userRepository.findByDeviceId("device-1")).willReturn(Optional.of(anonymousUser));
         given(jwtProvider.issueAccessToken(any())).willReturn("access-token");
         given(jwtProvider.issueRefreshToken(any())).willReturn("refresh-token");
         given(jwtProvider.getExpiration(any())).willReturn(Instant.now().plusSeconds(1800));
 
-        authService.login("kakao", request);
+        authService.login(OAuthProviderType.KAKAO.getCode(), request);
 
         assertThat(anonymousUser.getOauthId()).isEqualTo("oauth-1");
-        assertThat(anonymousUser.getOauthProvider()).isEqualTo("kakao");
+        assertThat(anonymousUser.getOauthProvider()).isEqualTo(OAuthProviderType.KAKAO.getCode());
         verify(userRepository, never()).save(any());
     }
 
@@ -116,14 +117,14 @@ class AuthServiceTest {
     @DisplayName("이미 다른 OAuth가 연결된 deviceId로 로그인하면 예외를 던진다")
     void 이미_다른_OAuth가_연결된_deviceId로_로그인하면_예외를_던진다() {
         User alreadyLinkedUser = User.createByDevice("device-1", Platform.IOS);
-        alreadyLinkedUser.linkOauth("apple", "apple-oauth-1");
+        alreadyLinkedUser.linkOauth(OAuthProviderType.APPLE.getCode(), "apple-oauth-1");
         OAuthLoginRequest request = new OAuthLoginRequest("device-1", "provider-token", Platform.IOS);
-        given(kakaoProvider.providerName()).willReturn("kakao");
+        given(kakaoProvider.providerName()).willReturn(OAuthProviderType.KAKAO.getCode());
         given(kakaoProvider.verify("provider-token")).willReturn(new OAuthUserInfo("oauth-1"));
-        given(userRepository.findByOauthProviderAndOauthId("kakao", "oauth-1")).willReturn(Optional.empty());
+        given(userRepository.findByOauthProviderAndOauthId(OAuthProviderType.KAKAO.getCode(), "oauth-1")).willReturn(Optional.empty());
         given(userRepository.findByDeviceId("device-1")).willReturn(Optional.of(alreadyLinkedUser));
 
-        assertThatThrownBy(() -> authService.login("kakao", request))
+        assertThatThrownBy(() -> authService.login(OAuthProviderType.KAKAO.getCode(), request))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.ALREADY_LINKED_OAUTH);
@@ -133,7 +134,7 @@ class AuthServiceTest {
     @DisplayName("지원하지 않는 provider로 로그인하면 예외를 던진다")
     void 지원하지_않는_provider로_로그인하면_예외를_던진다() {
         OAuthLoginRequest request = new OAuthLoginRequest("device-1", "provider-token", Platform.IOS);
-        given(kakaoProvider.providerName()).willReturn("kakao");
+        given(kakaoProvider.providerName()).willReturn(OAuthProviderType.KAKAO.getCode());
 
         assertThatThrownBy(() -> authService.login("google", request))
                 .isInstanceOf(BusinessException.class)

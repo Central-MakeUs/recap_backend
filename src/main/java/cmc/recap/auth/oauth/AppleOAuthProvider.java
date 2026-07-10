@@ -51,7 +51,7 @@ public class AppleOAuthProvider implements OAuthProvider {
 
     @Override
     public String providerName() {
-        return "apple";
+        return OAuthProviderType.APPLE.getCode();
     }
 
     private static ConfigurableJWTProcessor<SecurityContext> createJwtProcessor(
