@@ -22,4 +22,9 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build and test
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_ACCESS_TOKEN_EXPIRY: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRY }}
+          JWT_REFRESH_TOKEN_EXPIRY: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRY }}
+          APPLE_BUNDLE_ID: ${{ secrets.APPLE_BUNDLE_ID }}
         run: ./gradlew clean build
