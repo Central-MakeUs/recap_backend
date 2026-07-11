@@ -4,84 +4,116 @@
 
 | 항목 | 값 |
 | --- | --- |
-| 상태 | Accepted |
-| 날짜 | 2026-07-07 (Draft 작성 2026-07-07, 확정 2026-07-07) |
-| 관련 | [ADR-0001](../adr/ADR-0001-deviceid-anonymous-identity.md), User 엔티티 |
+| 상태 | Accepted (개정) |
+| 날짜 | 2026-07-07 최초 확정, 2026-07-10 개정(email 제거, Apple 로그인 iOS 전용으로 확정) |
+| 관련 | [ADR-0001](../adr/ADR-0001-deviceid-anonymous-identity.md), [ADR-0008](../adr/ADR-0008-exchange-code-deeplink-pattern.md)(현재 미적용, 하단 참고), User 엔티티 |
+
+## 개정 이력
+
+- 2026-07-10: RECAP 서버는 email을 사용하지 않는 것으로 확정. Apple의
+  "최초 로그인 시에만 이메일 제공" 관련 로직 전체 제거. API 경로에 `/v1`
+  프리픽스 추가.
+- 2026-07-10 (2차, 이후 3차 결정으로 대부분 롤백됨): Android + Apple 웹
+  기반 콜백 플로우를 설계하고, 딥링크 가로채기 위험 대응으로
+  exchangeCode 패턴([ADR-0008](../adr/ADR-0008-exchange-code-deeplink-pattern.md))을
+  도입했었음.
+- 2026-07-10 (3차): **Apple 로그인은 iOS에서만 제공하는 것으로 확정.**
+  Android는 카카오 로그인만 제공한다. 이에 따라 Android + Apple 웹 콜백
+  플로우, exchangeCode 패턴, Apple Services ID 관련 설정이 전부
+  불필요해져 제거함. 상세 배경은 [ADR-0009](../adr/ADR-0009-apple-login-ios-only.md) 참고.
+- 2026-07-10 (4차): `User.email` 필드를 완전히 제거. 1차 개정에서는
+  "email을 쓰지 않되 계정 구조 확장 여지로 필드는 남겨둔다"였으나, 실제로
+  쓰지 않는 필드를 남겨둘 이유가 없다고 판단해 필드와 `linkOauth()`의
+  email 파라미터를 전부 삭제함. 추후 email이 필요해지면 그 시점에 다시
+  추가한다.
+- 2026-07-11 (5차): `VALID_APPLE_AUDIENCE`를 Java 상수에서 환경변수
+  (`apple.bundle-id`, `@Value("${apple.bundle-id}")`)로 전환. dev/prod
+  앱을 분리하게 되면 Bundle ID가 배포 환경마다 달라질 수 있어
+  `domain-design-principles.md` #8(매직 리터럴/환경변수 구분 규칙)
+  기준으로 환경변수 대상으로 재분류함. Apple JWKS URL/issuer는 제3자
+  서비스 고정값이라 Java 상수로 유지한다.
 
 ## 맥락 (Context)
 
 ADR-0001에 따라 RECAP MVP는 deviceId 기반 익명 식별로 시작했으나, 클라우드
 백업/기기 교체 복원, 구독 결제, 팀 공유 등 로드맵 기능은 영속적 계정 식별을
 요구한다. App Store 심사 가이드라인 4.8에 의해 제3자 소셜 로그인을 제공하면
-Sign in with Apple을 함께 제공해야 하므로, 카카오와 Apple 로그인을 한 세트로
+Sign in with Apple을 함께 제공해야 하므로, 카카오와 Apple 로그인을 함께
 설계한다.
+
+**Apple 로그인은 iOS에서만 제공한다.** Apple이 Android 네이티브 SDK를
+제공하지 않아 Android에서 지원하려면 웹 기반 플로우(서버 콜백, 딥링크,
+Services ID 등)가 추가로 필요한데, ADR-0009에 따라 이 복잡도를 감수하지
+않고 Android는 카카오 로그인만 제공하기로 결정했다.
+
+**RECAP 서버는 email을 어떤 용도로도 사용하지 않는다.** 유저 식별은
+`(oauthProvider, oauthId)` 조합만으로 완결되며, 카카오 동의항목에서 이메일을
+요청하지 않고 Apple identityToken에서도 email 클레임을 사용하지 않는다.
 
 ## 결정 (Decision)
 
-### 인증 흐름
+### 인증 흐름 — 단일 패턴
 
-- 앱(iOS/Android)이 카카오/Apple SDK로 provider 토큰(또는 ID token)을
-  직접 수신하고, 이를 백엔드로 전달한다. 백엔드는 이 값을 provider 서버에
-  검증한 뒤 자체 JWT(Access/Refresh)를 발급한다 (ADR-0001 확정).
-- 검증 방식: Spring Security `OAuth2Client`(서버 주도 리다이렉트 플로우)를
-  사용하지 않는다. 이 프로젝트의 흐름은 "클라이언트가 이미 받은 토큰을
-  서버가 검증"하는 패턴이라 성격이 다르기 때문이다.
-    - 카카오: `RestClient`로 `GET https://kapi.kakao.com/v2/user/me`
-      호출(`Authorization: Bearer {token}`)해 사용자 식별 정보를 얻는다.
-    - Apple: `identityToken`(JWT)을 Apple의 JWKS
-      (`https://appleid.apple.com/auth/keys`)로 서명 검증한다.
+모든 provider·플랫폼 조합(iOS Apple, iOS/Android Kakao)이 동일한 패턴을
+따른다. 앱이 SDK로 provider 토큰(또는 identityToken)을 직접 수신하고, 이를
+백엔드로 전달한다. 백엔드는 이 값을 provider 서버에 검증한 뒤 자체 JWT를
+발급한다.
+
+```
+POST /api/v1/auth/oauth/{provider}/login
+```
+
+Apple이 iOS 전용으로 확정되면서, 서버가 provider로부터 직접 콜백을 받는
+예외 흐름 자체가 필요 없어졌다. 모든 로그인이 "앱이 토큰을 받아 서버로
+전달"하는 하나의 흐름으로 통일된다.
+
+### 검증 방식
+
+- 카카오: `RestClient`로 `GET https://kapi.kakao.com/v2/user/me` 호출
+  (`Authorization: Bearer {token}`). 응답에서 `id`(회원번호)만 사용한다.
+- Apple: `identityToken`(JWT)을 Apple의 JWKS(`https://appleid.apple.com/auth/keys`)로
+  서명 검증한다. `sub` 클레임을 `oauthId`로 사용한다. `aud` 클레임은
+  iOS Bundle ID 하나와만 비교한다(Android 대응이 없으므로 이중 검증
+  불필요). Bundle ID는 환경변수(`apple.bundle-id`)로 주입한다(5차 개정,
+  위 "개정 이력" 참고).
+- **email은 어느 provider에서도 추출/저장하지 않는다.** `User`에는 email
+  관련 필드 자체가 존재하지 않는다(4차 개정으로 완전 제거, 위 "개정 이력" 참고).
+
+```java
+public AppleOAuthProvider(@Value("${apple.bundle-id}") String bundleId) { ... }
+```
 
 ### 토큰 체계
 
 | 항목 | 값 | 근거 |
 | --- | --- | --- |
-| Access Token 만료 | 30분 | 업계 권장 범위(15~60분) 내 중간값. 모바일 백그라운드 전환 빈도를 고려 |
-| Refresh Token 만료 | 14일 | 업계 권장 범위(7~14일). 리텐션 지표로 추후 조정 가능 |
-| Refresh Token 저장 | SHA-256 해시 저장 (원문 미저장) | OWASP/업계 권고. DB 유출 시 토큰 전체 탈취 방지 |
-| 로테이션 정책 | 재발급 시 기존 Refresh Token 즉시 폐기(single-use) | 재전송(replay) 공격 방지 |
-| 서명 키 | 대칭키(HS256), 환경변수(`JWT_SECRET`)로 관리 | 현재 인프라(단일 EC2, KMS 미도입) 규모에서 RS256+키 로테이션은 과설계로 판단 |
-| API 버전 프리픽스 | 없음 (`/api/auth/...`) | 현재 버전 분기 요구 없음. 필요 시점에 도입 |
+| Access Token 만료 | 30분 | 업계 권장 범위(15~60분) 내 중간값 |
+| Refresh Token 만료 | 14일 | 업계 권장 범위(7~14일) |
+| Refresh Token 저장 | SHA-256 해시 저장 (원문 미저장) | DB 유출 시 토큰 전체 탈취 방지 |
+| 로테이션 정책 | 재발급 시 기존 Refresh Token 즉시 폐기 | 재전송 공격 방지 |
+| 서명 키 | 대칭키(HS256), 환경변수(JWT_SECRET) | 현재 인프라 규모에서 RS256+로테이션은 과설계 |
+| API 버전 프리픽스 | /api/v1 | 확정 |
 
 ### 계정 식별 및 병합
 
-- 로그인 요청에는 `deviceId`를 **항상 필수**로 받는다(최초 가입/재로그인
-  공통).
-- 조회 순서: `oauthProvider + oauthId`로 기존 유저를 먼저 조회한다.
-    - 있으면 해당 유저로 로그인 처리(요청의 deviceId는 무시하거나 최근
-      접속 기기 기록용으로만 갱신 — 계정의 진짜 식별자는 oauthId).
-    - 없으면 `deviceId`로 기존 익명 유저를 조회해 `linkOauth`로 병합한다.
-    - 그마저 없으면(deviceId도 처음 보는 값) 신규 `User`를 생성한다.
-- 병합 시나리오(기기 A 익명 사용 → 기기 B 로그인 → 기기 A 재로그인): 로그인
-  시점부터는 deviceId가 아니라 `oauthId`가 진짜 식별자이므로, 기기가
-  달라도 동일 계정으로 정상 로그인 처리한다. 기존 deviceId 기반 데이터는
-  그대로 유지되며 별도 충돌 처리가 필요 없다.
-- 완전 신규 유저(oauthId, deviceId 둘 다 미존재) 생성 시 필요한 최소
-  정보는 기존 `User` 엔티티 설계로 이미 해결되어 있다: `platform`은
-  엔티티 상 `nullable = false`이므로 로그인 요청에도 필수로 받는다.
-
-### Apple 이메일 처리
-
-Apple은 이메일 필드를 **최초 인가 시점에만** 내려주고 이후 로그인부터는
-제공하지 않는다(Apple 개발자 문서/포럼에서 확인된 사실, 선택 사항이 아님).
-따라서 최초 로그인 시점에 수신한 이메일을 `User.email`에 저장해두고,
-이후 로그인에서는 재요청하지 않는다.
+- 로그인 요청에는 deviceId를 항상 필수로 받는다.
+- 조회 순서: oauthProvider + oauthId로 기존 유저 먼저 조회 -> 없으면
+  deviceId로 익명 유저 조회 후 linkOauth로 병합 -> 그마저 없으면 신규
+  User 생성.
+- 병합 시나리오: 로그인 이후에는 oauthId가 진짜 식별자이므로, 기기가
+  달라도 동일 계정으로 정상 로그인 처리한다.
 
 ### API 엔드포인트
 
 | 메서드 | 경로 | 설명 |
 | --- | --- | --- |
-| POST | `/api/auth/oauth/{provider}/login` | provider(`kakao`\|`apple`) 토큰으로 로그인/가입 |
-| POST | `/api/auth/refresh` | Refresh Token으로 Access Token 재발급(로테이션 포함) |
-| POST | `/api/auth/logout` | Refresh Token 무효화 (이번 범위 포함) |
-
-단일 엔드포인트(`{provider}` path variable) 구조로 확정. provider별 요청
-필드 차이(카카오 access token vs Apple identity token)는 서비스 레이어의
-전략 객체(`OAuthProvider` 인터페이스 구현체)로 분기한다.
+| POST | /api/v1/auth/oauth/{provider}/login | provider(kakao\|apple) 토큰으로 로그인/가입 |
+| POST | /api/v1/auth/refresh | Refresh Token으로 Access Token 재발급(로테이션 포함) |
+| POST | /api/v1/auth/logout | Refresh Token 무효화 |
 
 ### DTO
 
 ```java
-// 요청
 record OAuthLoginRequest(
         String deviceId,
         String providerToken,
@@ -96,7 +128,6 @@ record LogoutRequest(
         String refreshToken
 ) {}
 
-// 응답
 record TokenResponse(
         String accessToken,
         String refreshToken,
@@ -121,7 +152,7 @@ public class RefreshToken extends BaseTimeEntity {
     private User user;
 
     @Column(name = "token_hash", nullable = false, unique = true)
-    private String tokenHash; // SHA-256(원문), 원문은 저장하지 않음
+    private String tokenHash;
 
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
@@ -148,49 +179,33 @@ public class RefreshToken extends BaseTimeEntity {
 }
 ```
 
-### 로그인 처리 전략 (OCP 고려)
-
-provider가 늘어날 가능성(구글 등)을 고려해, provider별 검증 로직을
-인터페이스로 분리한다. 새 provider 추가 시 기존 코드를 건드리지 않고
-구현체만 추가하면 되도록 한다.
-
-```java
-public interface OAuthProvider {
-    OAuthUserInfo verify(String providerToken);
-    String providerName(); // "kakao", "apple"
-}
-
-public record OAuthUserInfo(
-        String oauthId,
-        String email // 없을 수 있음(nullable)
-) {}
-```
-
 ## 고려한 대안 (Considered Options)
 
-1. **provider별 엔드포인트 분리** (`/kakao/login`, `/apple/login`) —
-   컨트롤러 레벨에서 분기가 명확하나 provider 추가 시 컨트롤러가 늘어남.
-2. **단일 엔드포인트** (`/oauth/{provider}/login`) (채택) — 경로가
-   간결하고, provider별 차이는 `OAuthProvider` 전략 인터페이스로 흡수해
-   컨트롤러가 아닌 서비스 레이어에서 처리한다.
+1. Apple 로그인을 iOS/Android 둘 다 지원 (기각, 상세는 ADR-0009) - Android
+   지원을 위해 웹 기반 콜백 플로우, 딥링크 보안 대응, Services ID 관리
+   등 상당한 복잡도가 추가되는데, 그 복잡도를 감수할 필요가 없다고 판단.
+2. Apple 로그인을 iOS 전용으로 제한 (채택) - 모든 로그인이 "앱이 토큰을
+   받아 서버로 전달"하는 단일 패턴으로 통일되어 구현/테스트가 단순해짐.
+3. email 계속 사용 + 최초 1회 저장 로직 유지 (기각) - 서버가 email을
+   쓰지 않기로 확정되어 관련 로직 전체가 불필요한 복잡도였다.
 
 ## 결과 (Consequences)
 
 ### 긍정
-- ADR-0001의 병합 전략을 그대로 재사용, `User` 엔티티 변경 없이 인증
-  계층만 추가.
-- Refresh Token 해시 저장 + 로테이션으로 토큰 탈취 시 피해 범위를 최소화.
-- provider 확장이 `OAuthProvider` 구현체 추가만으로 가능(OCP).
+- 모든 로그인이 단일 패턴(클라이언트 토큰 포워딩)으로 통일됨 - 구현체가
+  `OAuthProvider` 인터페이스 하나로 깔끔하게 정리됨.
+- 서버 콜백, 딥링크, exchangeCode 캐시, 이중 audience 검증이 전부
+  불필요해져 구현 범위가 크게 줄어듦.
+- email 제거로 Apple "최초 1회 이메일" 처리 로직, 카카오 이메일 동의항목
+  심사가 모두 불필요해짐.
 
 ### 부정 / 트레이드오프
-- 대칭키(HS256) 방식은 추후 다른 서비스와 토큰을 공유해야 하는 상황이
-  오면 RS256으로 전환이 필요.
-- Access Token 30분/Refresh 14일은 업계 권장 범위 기반 초깃값이며, 실사용
-  리텐션 데이터로 검증되지 않았다(추후 조정 가능성 있음).
+- Android 사용자는 Apple 계정으로 로그인할 수 없다 - 카카오 계정이 없는
+  Android 사용자는 가입 자체가 불가능해질 수 있다(제품 관점에서 인지 필요).
 
 ## 후속 / 미결정
 
-- [ ] Apple 개발자 계정 이전(조직 변경) 시 사용자 식별자가 바뀔 수 있다는
-  커뮤니티 보고가 있음. 현재 팀 이전 계획이 없어 지금 대응하지 않으나,
-  추후 조직 구조 변경 시 재검토 필요(근거가 Apple 공식 문서가 아닌
-  개발자 커뮤니티 보고라 일반화에 주의).
+- [ ] Android에서 Apple 계정만 있고 카카오 계정이 없는 사용자의 유입
+  손실 규모를 추후 지표로 관찰할지 여부 (제품 논의 필요)
+- [ ] 이미 생성한 Apple Services ID(`com.cmc.recap.service`)를 삭제할지,
+  추후 재도입 가능성을 열어두고 그냥 둘지 (급하지 않음)

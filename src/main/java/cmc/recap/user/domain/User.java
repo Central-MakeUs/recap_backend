@@ -1,6 +1,8 @@
 package cmc.recap.user.domain;
 
 import cmc.recap.global.entity.BaseTimeEntity;
+import cmc.recap.global.exception.ErrorCode;
+import cmc.recap.global.exception.model.BusinessException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -33,9 +35,6 @@ public class User extends BaseTimeEntity {
     @Column(name = "fcm_token")
     private String fcmToken;
 
-    @Column(name = "email")
-    private String email;
-
     @Column(name = "oauth_provider")
     private String oauthProvider;
 
@@ -48,19 +47,25 @@ public class User extends BaseTimeEntity {
     }
 
     public static User createByDevice(String deviceId, Platform platform) {
+        validateDeviceId(deviceId);
         return new User(deviceId, platform);
     }
 
-    public void linkOauth(String email, String oauthProvider, String oauthId) {
+    public void linkOauth(String oauthProvider, String oauthId) {
         if (this.oauthId != null) {
-            throw new IllegalStateException("이미 소셜 계정이 연결된 유저입니다.");
+            throw new BusinessException(ErrorCode.ALREADY_LINKED_OAUTH);
         }
-        this.email = email;
         this.oauthProvider = oauthProvider;
         this.oauthId = oauthId;
     }
 
     public void updateFcmToken(String fcmToken) {
         this.fcmToken = fcmToken;
+    }
+
+    private static void validateDeviceId(String deviceId) {
+        if (deviceId == null || deviceId.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "deviceId는 필수입니다.");
+        }
     }
 }

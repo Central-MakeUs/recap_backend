@@ -12,6 +12,8 @@
 - LLD의 "미결정 사항"은 추측으로 채우지 않는다. 반드시 질문한다.
 - ADR/LLD에 근거해 미리 마련된 확장 필드나 구조(예: nullable 컬럼, 다형성 설계)는
     "요청받지 않은 유연성"이 아니라 팀이 이미 결정한 요청으로 간주하고 임의로 단순화하지 않는다.
+- 코드 구현은 implement 스킬, 커밋 전 검수는 review 스킬을 따른다.
+- 엔티티/도메인 객체는 docs/conventions/domain-design-principles.md를 따른다.
 
 ## 코드 규칙
 - JPA AttributeConverter/EntityListener에 생성자 DI 금지 (ADR-0005)

@@ -20,3 +20,5 @@
 | [ADR-0005](ADR-0005-jpa-component-di-exclusion.md) | JPA 생명주기 관리 컴포넌트의 스프링 DI 배제 원칙 | Accepted | 2026-07-07 |
 | [ADR-0006](ADR-0006-instant-utc-time-standard.md) | 시간 표준 — Instant 타입과 UTC 고정 | Accepted | 2026-07-07 |
 | [ADR-0007](ADR-0007-swagger-interface-documentation.md) | Swagger 문서화 — 인터페이스 분리 및 에러 응답 자동 문서화 | Accepted | 2026-07-08 |
+| [ADR-0008](ADR-0008-exchange-code-deeplink-pattern.md) | Android Apple 콜백 — 딥링크에 토큰 대신 1회용 교환 코드 사용 | Superseded by [ADR-0009](ADR-0009-apple-login-ios-only.md) | 2026-07-10 |
+| [ADR-0009](ADR-0009-apple-login-ios-only.md) | Apple 로그인을 iOS 전용으로 제한 | Accepted | 2026-07-10 |

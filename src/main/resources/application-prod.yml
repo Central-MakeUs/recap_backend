@@ -36,3 +36,11 @@ springdoc:
 swagger:
   server:
     url: https://re-cap.duckdns.org
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiry: ${JWT_ACCESS_TOKEN_EXPIRY}
+  refresh-token-expiry: ${JWT_REFRESH_TOKEN_EXPIRY}
+
+apple:
+  bundle-id: ${APPLE_BUNDLE_ID}
