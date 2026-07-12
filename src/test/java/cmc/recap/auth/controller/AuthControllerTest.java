@@ -81,6 +81,16 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("요청 본문이 없으면 500이 아니라 400을 응답한다")
+    void 요청_본문이_없으면_500이_아니라_400을_응답한다() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("INVALID_INPUT"));
+    }
+
+    @Test
     @DisplayName("인증 없이 보호된 엔드포인트에 접근하면 401을 응답한다")
     void 인증_없이_보호된_엔드포인트에_접근하면_401을_응답한다() throws Exception {
         mockMvc.perform(get("/api/v1/cards"))
