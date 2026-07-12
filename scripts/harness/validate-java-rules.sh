@@ -111,6 +111,21 @@ if [[ "$FILE" == *"/domain/"* || "$FILE" == *"/service/"* ]]; then
 fi
 
 # ──────────────────────────────────────────────
+# 규칙 7: 본문 코드에 FQN(전체 경로) 인라인 참조 금지
+# → docs/swagger/api-spec-guide.md #8
+# import 없이 cmc.recap.* 전체 경로를 코드 본문에 그대로 쓰면 경고.
+# 이름 충돌(ApiResponse 등)로 불가피한 경우만 예외로 허용되며,
+# 그 경우 이 파일의 리뷰어가 직접 판단한다 (자동 면제 처리는 하지 않음).
+# ──────────────────────────────────────────────
+FQN_INLINE=$(grep -nE '(^|[^."a-zA-Z0-9_])cmc\.recap\.[a-z][a-zA-Z0-9_.]*\.[A-Z][a-zA-Z0-9_]*' "$FILE" \
+    | grep -v '^\s*import ' | grep -v '^\s*package ' | grep -v '^\s*//')
+if [[ -n "$FQN_INLINE" ]]; then
+    echo "⚠️  [규칙7] 본문에 FQN 인라인 참조 의심 (휴리스틱 — 이름 충돌로 인한"
+    echo "   의도적 예외라면 무시해도 됨. api-spec-guide.md #8 기준 확인)"
+    echo "$FQN_INLINE" | sed 's/^/   /'
+fi
+
+# ──────────────────────────────────────────────
 # 결과
 # ──────────────────────────────────────────────
 if [[ $ERRORS -gt 0 ]]; then
