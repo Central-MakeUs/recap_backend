@@ -47,8 +47,9 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            set -e
             cd ~/recap
-            docker pull ghcr.io/${{ github.repository_owner }}/recap-api:latest
+            docker pull ghcr.io/${{ env.OWNER }}/recap-api:latest
             docker compose down
             docker compose up -d
             docker image prune -f
