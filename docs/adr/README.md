@@ -15,10 +15,13 @@
 | --- | --- | --- | --- |
 | [ADR-0001](ADR-0001-deviceid-anonymous-identity.md) | deviceId 기반 익명 식별 및 OAuth 병합 전략 | Accepted | 2026-07-07 |
 | [ADR-0002](ADR-0002-card-summary-json-polymorphism.md) | 카드 요약 필드의 JSON 컬럼 + 다형성 컨버터 저장 | Accepted | 2026-07-07 |
-| [ADR-0003](ADR-0003-no-original-image-storage.md) | 원본 스크린샷 이미지 미저장 (텍스트 요약 완결) | Accepted | 2026-07-07 |
+| [ADR-0003](ADR-0003-no-original-image-storage.md) | 원본 스크린샷 이미지 미저장 (텍스트 요약 완결) | Superseded by [ADR-0010](ADR-0010-original-image-s3-storage.md) | 2026-07-07 |
 | [ADR-0004](ADR-0004-amd64-instance-architecture.md) | 빌드-런타임 아키텍처 일치를 위한 amd64 EC2 채택 | Accepted | 2026-07-07 |
 | [ADR-0005](ADR-0005-jpa-component-di-exclusion.md) | JPA 생명주기 관리 컴포넌트의 스프링 DI 배제 원칙 | Accepted | 2026-07-07 |
 | [ADR-0006](ADR-0006-instant-utc-time-standard.md) | 시간 표준 — Instant 타입과 UTC 고정 | Accepted | 2026-07-07 |
 | [ADR-0007](ADR-0007-swagger-interface-documentation.md) | Swagger 문서화 — 인터페이스 분리 및 에러 응답 자동 문서화 | Accepted | 2026-07-08 |
 | [ADR-0008](ADR-0008-exchange-code-deeplink-pattern.md) | Android Apple 콜백 — 딥링크에 토큰 대신 1회용 교환 코드 사용 | Superseded by [ADR-0009](ADR-0009-apple-login-ios-only.md) | 2026-07-10 |
 | [ADR-0009](ADR-0009-apple-login-ios-only.md) | Apple 로그인을 iOS 전용으로 제한 | Accepted | 2026-07-10 |
+| [ADR-0010](ADR-0010-original-image-s3-storage.md) | 원본 스크린샷 이미지 S3 저장 재도입 (ADR-0003 대체) | Accepted | 2026-07-13 |
+| [ADR-0011](ADR-0011-infocard-flat-summary-fields.md) | InfoCard 표시 필드(title/summary/body)를 평문 컬럼으로 확정 | Accepted | 2026-07-13 |
+| [ADR-0012](ADR-0012-presigned-url-image-upload.md) | 원본 이미지 업로드는 Presigned URL 방식으로 확정 | Accepted | 2026-07-13 |
