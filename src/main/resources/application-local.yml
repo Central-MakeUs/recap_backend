@@ -40,3 +40,8 @@ jwt:
 
 apple:
   bundle-id: ${APPLE_BUNDLE_ID}
+
+aws:
+  region: ${AWS_REGION:ap-northeast-2}
+  s3:
+    bucket-name: ${S3_BUCKET_NAME:recap-local-test-bucket}
