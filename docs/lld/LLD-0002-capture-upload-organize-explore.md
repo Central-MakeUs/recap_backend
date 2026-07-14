@@ -220,10 +220,24 @@ S3 IAM 정책을 사용자 단위로 좁힐 여지를 남긴다(지금 당장은
 `POST /captures/organize`는 `OrganizeBatch`를 `PROCESSING`으로 생성하고
 즉시 응답한 뒤, 각 이미지를 **비동기로 개별 처리**한다.
 
+AI 분석은 [ADR-0013](../adr/ADR-0013-image-analysis-pipeline.md)에서
+확정한 `ImageAnalysisProvider` 인터페이스를 통해 수행한다.
+
+```java
+public interface ImageAnalysisProvider {
+    ImageAnalysisResult analyze(String imageKey);
+}
+
+public record ImageAnalysisResult(
+        CardType type, String title, String summary, String body, String extractedText
+) {}
+```
+
 ```
 이미지 1건마다:
   1. S3에서 이미지 로드 (또는 이미지 참조로 AI 분석 API 호출)
-  2. AI 분석 → CardType, title, summary, body, extractedText 추출
+  2. ImageAnalysisProvider.analyze(imageKey) 호출 → CardType, title,
+     summary, body, extractedText 추출
   3. InfoCard.create(...) → 즉시 저장 (커밋)
   4. batch.recordSuccess() 또는 batch.recordFailure()
 
