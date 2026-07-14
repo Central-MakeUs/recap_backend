@@ -31,7 +31,11 @@ public enum ErrorCode {
     OAUTH_VERIFICATION_FAILED(HttpStatus.UNAUTHORIZED, "소셜 로그인 토큰 검증에 실패했습니다"),
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다"),
     EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "만료된 리프레시 토큰입니다"),
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다")
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다"),
+
+    // 이미지 분석 (500, 400)
+    IMAGE_ANALYSIS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 분석에 실패했습니다"),
+    IMAGE_UPLOAD_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "업로드된 이미지를 찾을 수 없습니다")
     ;
 
     private final HttpStatus httpStatus;
