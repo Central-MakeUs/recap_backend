@@ -179,6 +179,32 @@ Java 상수(private static final)로 남긴다
 (`AppleOAuthProvider(JWKSource<SecurityContext> jwkSource)`처럼). 이미
 테스트 가능성이 확보되어 있다면 URL을 환경변수로 뺄 이유가 하나 줄어든다.
 
+## 9. 생성자 오버로드 규칙 (Spring 빈)
+
+- 운영용 생성자와 테스트용 package-private 생성자(시임)를 함께 둔
+  Spring 빈(`@Component` 등)은 **운영용 생성자에 반드시 `@Autowired`를
+  명시**한다. 생성자가 2개 이상인데 어느 것도 `@Autowired`가 없으면
+  Spring이 기본 생성자를 찾다가 `BeanInstantiationException`으로
+  기동 자체가 실패한다.
+- `AppleOAuthProvider`, `GeminiImageAnalysisProvider`에서 같은 실수가
+  반복됐다 — 테스트용 생성자를 추가할 때마다 놓치기 쉬운 지점이므로
+  체크리스트에 포함한다.
+
+```java
+@Component
+public class ExampleProvider {
+
+    @Autowired
+    public ExampleProvider(@Value("${example.key}") String key) {
+        this(RestClient.builder(), key);
+    }
+
+    ExampleProvider(RestClient.Builder restClientBuilder, String key) {
+        // 테스트에서 RestClient.Builder를 목으로 주입하기 위한 시임
+    }
+}
+```
+
 ## 체크리스트 (구현 시 자가 점검)
 
 - [ ] 이 엔티티는 `new`로 직접 생성 가능한가? → 가능하면 위반
@@ -192,6 +218,8 @@ Java 상수(private static final)로 남긴다
   (반대로 뺐는가)?
 - [ ] 여러 클래스에 반복되는 문자열 리터럴이 하나의 공용 상수를
   참조하는가?
+- [ ] 생성자가 2개 이상인 Spring 빈에서 운영용 생성자에 `@Autowired`가
+  빠지지 않았는가?
 
 ## 자동 검증
 
