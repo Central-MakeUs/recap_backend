@@ -1,15 +1,30 @@
 package cmc.recap.card.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import cmc.recap.global.exception.ErrorCode;
+import cmc.recap.global.exception.model.BusinessException;
 import cmc.recap.user.domain.Platform;
 import cmc.recap.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class OrganizeBatchTest {
 
     private final User user = User.createByDevice("device-1", Platform.ANDROID);
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1})
+    @DisplayName("totalCount가 0 이하이면 start() 시 예외를 던진다")
+    void totalCount가_0_이하이면_start_시_예외를_던진다(int totalCount) {
+        assertThatThrownBy(() -> OrganizeBatch.start(user, totalCount))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_INPUT);
+    }
 
     @Test
     @DisplayName("start()로 생성하면 PROCESSING 상태로 시작한다")

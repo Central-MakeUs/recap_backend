@@ -1,6 +1,8 @@
 package cmc.recap.card.domain;
 
 import cmc.recap.global.entity.BaseTimeEntity;
+import cmc.recap.global.exception.ErrorCode;
+import cmc.recap.global.exception.model.BusinessException;
 import cmc.recap.user.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -48,6 +50,7 @@ public class OrganizeBatch extends BaseTimeEntity {
     private boolean acknowledged;
 
     public static OrganizeBatch start(User user, int totalCount) {
+        validateTotalCount(totalCount);
         OrganizeBatch batch = new OrganizeBatch();
         batch.user = user;
         batch.status = BatchStatus.PROCESSING;
@@ -77,6 +80,12 @@ public class OrganizeBatch extends BaseTimeEntity {
 
     public void acknowledge() {
         this.acknowledged = true;
+    }
+
+    private static void validateTotalCount(int totalCount) {
+        if (totalCount <= 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "정리할 이미지가 없습니다.");
+        }
     }
 
     private void refreshStatusIfDone() {
