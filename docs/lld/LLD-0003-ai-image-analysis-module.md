@@ -144,8 +144,8 @@ ETC를 선택하세요.
 ### 재시도 정책
 
 ```
-재시도 대상 (최대 1회, 고정 지연 후): 5xx, 429(TOO_MANY_REQUESTS),
-                                       타임아웃(ResourceAccessException)
+재시도 대상 (최대 1회, 500ms 고정 지연 후): 5xx, 429(TOO_MANY_REQUESTS),
+                                            타임아웃(ResourceAccessException)
 재시도 비대상 (즉시 실패): 그 외 4xx
 ```
 
