@@ -35,7 +35,10 @@ public enum ErrorCode {
 
     // 이미지 분석 (500, 400)
     IMAGE_ANALYSIS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 분석에 실패했습니다"),
-    IMAGE_UPLOAD_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "업로드된 이미지를 찾을 수 없습니다")
+    IMAGE_UPLOAD_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "업로드된 이미지를 찾을 수 없습니다"),
+
+    // 정리 (409)
+    ORGANIZE_IN_PROGRESS(HttpStatus.CONFLICT, "이미 진행 중인 정리 작업이 있습니다")
     ;
 
     private final HttpStatus httpStatus;
