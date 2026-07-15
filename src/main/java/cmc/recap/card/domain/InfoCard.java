@@ -31,6 +31,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class InfoCard extends BaseTimeEntity {
 
+    public static final int TITLE_MAX_LENGTH = 30;
+    public static final int SUMMARY_MAX_LENGTH = 80;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -43,10 +46,10 @@ public class InfoCard extends BaseTimeEntity {
     @Column(name = "type", nullable = false)
     private CardType type;
 
-    @Column(name = "title", nullable = false, length = 30)
+    @Column(name = "title", nullable = false, length = TITLE_MAX_LENGTH)
     private String title;
 
-    @Column(name = "summary", length = 80)
+    @Column(name = "summary", length = SUMMARY_MAX_LENGTH)
     private String summary;
 
     @Column(name = "body", columnDefinition = "TEXT")
@@ -105,8 +108,8 @@ public class InfoCard extends BaseTimeEntity {
         if (title == null || title.isBlank()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "제목은 필수입니다.");
         }
-        if (title.length() > 30) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "제목은 30자를 초과할 수 없습니다.");
+        if (title.length() > TITLE_MAX_LENGTH) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "제목은 " + TITLE_MAX_LENGTH + "자를 초과할 수 없습니다.");
         }
     }
 }

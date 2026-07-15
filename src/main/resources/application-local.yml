@@ -45,3 +45,7 @@ aws:
   region: ${AWS_REGION:ap-northeast-2}
   s3:
     bucket-name: ${S3_BUCKET_NAME:recap-local-test-bucket}
+
+gemini:
+  api-key: ${GEMINI_API_KEY:local-dev-placeholder-not-a-real-key}
+  model-name: ${GEMINI_MODEL_NAME:gemini-2.5-flash}

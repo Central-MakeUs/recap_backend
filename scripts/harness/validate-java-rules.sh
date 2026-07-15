@@ -118,7 +118,7 @@ fi
 # 그 경우 이 파일의 리뷰어가 직접 판단한다 (자동 면제 처리는 하지 않음).
 # ──────────────────────────────────────────────
 FQN_INLINE=$(grep -nE '(^|[^."a-zA-Z0-9_])cmc\.recap\.[a-z][a-zA-Z0-9_.]*\.[A-Z][a-zA-Z0-9_]*' "$FILE" \
-    | grep -v '^\s*import ' | grep -v '^\s*package ' | grep -v '^\s*//')
+    | grep -vE '^[0-9]+:\s*import ' | grep -vE '^[0-9]+:\s*package ' | grep -vE '^[0-9]+:\s*//')
 if [[ -n "$FQN_INLINE" ]]; then
     echo "⚠️  [규칙7] 본문에 FQN 인라인 참조 의심 (휴리스틱 — 이름 충돌로 인한"
     echo "   의도적 예외라면 무시해도 됨. api-spec-guide.md #8 기준 확인)"

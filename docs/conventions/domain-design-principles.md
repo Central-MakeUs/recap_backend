@@ -179,6 +179,53 @@ Java 상수(private static final)로 남긴다
 (`AppleOAuthProvider(JWKSource<SecurityContext> jwkSource)`처럼). 이미
 테스트 가능성이 확보되어 있다면 URL을 환경변수로 뺄 이유가 하나 줄어든다.
 
+## 9. 생성자 오버로드 규칙 (Spring 빈)
+
+- 운영용 생성자와 테스트용 package-private 생성자(시임)를 함께 둔
+  Spring 빈(`@Component` 등)은 **운영용 생성자에 반드시 `@Autowired`를
+  명시**한다. 생성자가 2개 이상인데 어느 것도 `@Autowired`가 없으면
+  Spring이 기본 생성자를 찾다가 `BeanInstantiationException`으로
+  기동 자체가 실패한다.
+- `AppleOAuthProvider`, `GeminiImageAnalysisProvider`에서 같은 실수가
+  반복됐다 — 테스트용 생성자를 추가할 때마다 놓치기 쉬운 지점이므로
+  체크리스트에 포함한다.
+
+```java
+@Component
+public class ExampleProvider {
+
+    @Autowired
+    public ExampleProvider(@Value("${example.key}") String key) {
+        this(RestClient.builder(), key);
+    }
+
+    ExampleProvider(RestClient.Builder restClientBuilder, String key) {
+        // 테스트에서 RestClient.Builder를 목으로 주입하기 위한 시임
+    }
+}
+```
+
+## 10. 문자열 자르기(truncate) 규칙
+
+- String 길이를 자르는 로직은 **코드 포인트**(`codePointCount`,
+  `offsetByCodePoints`) 단위로 처리한다. `substring(0, N)`처럼 UTF-16
+  code unit 기준으로 자르면 서로게이트 쌍(이모지 등 BMP 밖 문자)을
+  반으로 끊어 깨진 문자열을 만들 수 있다.
+- MySQL `VARCHAR(N)`의 `N`은 charset과 무관하게 항상 "문자(코드 포인트)
+  수" 기준이므로, 코드 포인트 단위로 자르는 것이 DB 컬럼 제약과도
+  정확히 맞는다.
+
+```java
+// 지양 — 서로게이트 쌍을 반으로 끊을 수 있음
+String truncated = value.substring(0, maxLength);
+
+// 지향 — 코드 포인트 경계에서만 자른다
+if (value.codePointCount(0, value.length()) > maxLength) {
+    int cutOffset = value.offsetByCodePoints(0, maxLength - 1);
+    String truncated = value.substring(0, cutOffset) + "…";
+}
+```
+
 ## 체크리스트 (구현 시 자가 점검)
 
 - [ ] 이 엔티티는 `new`로 직접 생성 가능한가? → 가능하면 위반
@@ -192,6 +239,10 @@ Java 상수(private static final)로 남긴다
   (반대로 뺐는가)?
 - [ ] 여러 클래스에 반복되는 문자열 리터럴이 하나의 공용 상수를
   참조하는가?
+- [ ] 생성자가 2개 이상인 Spring 빈에서 운영용 생성자에 `@Autowired`가
+  빠지지 않았는가?
+- [ ] 문자열을 자르는 로직이 `substring(0, N)`(UTF-16 기준)이 아니라
+  코드 포인트 기준(`offsetByCodePoints`)으로 되어 있는가?
 
 ## 자동 검증
 
