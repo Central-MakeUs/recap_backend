@@ -23,11 +23,11 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
-import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Component
 public class GeminiImageAnalysisProvider implements ImageAnalysisProvider {
@@ -146,7 +146,7 @@ public class GeminiImageAnalysisProvider implements ImageAnalysisProvider {
             return s3Client.getObjectAsBytes(request);
         } catch (NoSuchKeyException e) {
             throw new BusinessException(ErrorCode.IMAGE_UPLOAD_VERIFICATION_FAILED, e);
-        } catch (S3Exception e) {
+        } catch (SdkException e) {
             throw new BusinessException(ErrorCode.IMAGE_ANALYSIS_FAILED, e);
         }
     }
