@@ -205,6 +205,27 @@ public class ExampleProvider {
 }
 ```
 
+## 10. 문자열 자르기(truncate) 규칙
+
+- String 길이를 자르는 로직은 **코드 포인트**(`codePointCount`,
+  `offsetByCodePoints`) 단위로 처리한다. `substring(0, N)`처럼 UTF-16
+  code unit 기준으로 자르면 서로게이트 쌍(이모지 등 BMP 밖 문자)을
+  반으로 끊어 깨진 문자열을 만들 수 있다.
+- MySQL `VARCHAR(N)`의 `N`은 charset과 무관하게 항상 "문자(코드 포인트)
+  수" 기준이므로, 코드 포인트 단위로 자르는 것이 DB 컬럼 제약과도
+  정확히 맞는다.
+
+```java
+// 지양 — 서로게이트 쌍을 반으로 끊을 수 있음
+String truncated = value.substring(0, maxLength);
+
+// 지향 — 코드 포인트 경계에서만 자른다
+if (value.codePointCount(0, value.length()) > maxLength) {
+    int cutOffset = value.offsetByCodePoints(0, maxLength - 1);
+    String truncated = value.substring(0, cutOffset) + "…";
+}
+```
+
 ## 체크리스트 (구현 시 자가 점검)
 
 - [ ] 이 엔티티는 `new`로 직접 생성 가능한가? → 가능하면 위반
@@ -220,6 +241,8 @@ public class ExampleProvider {
   참조하는가?
 - [ ] 생성자가 2개 이상인 Spring 빈에서 운영용 생성자에 `@Autowired`가
   빠지지 않았는가?
+- [ ] 문자열을 자르는 로직이 `substring(0, N)`(UTF-16 기준)이 아니라
+  코드 포인트 기준(`offsetByCodePoints`)으로 되어 있는가?
 
 ## 자동 검증
 
