@@ -49,6 +49,50 @@ LLD를 기반으로 코드를 구현한다. 구현 완료 후 반드시 **review
 - 상태 검증(`assertEquals`, `assertThat`)을 우선하고, 외부 호출·이벤트
   발행·삭제 같은 side effect만 `verify`로 검증한다
 
+### 테스트 작성 시 토큰 절약 규칙
+
+- 스타일을 맞추려고 기존 테스트 파일 전체를 다시 읽지 않는다. 아래
+  템플릿을 그대로 따르면 충분하다:
+
+  ```java
+  @ExtendWith(MockitoExtension.class)
+  class {ClassName}Test {
+      @Mock
+      private {Dependency} {dependency};
+      private {ClassName} sut;
+
+      @BeforeEach
+      void setUp() {
+          sut = new {ClassName}({dependency}, ...);
+      }
+
+      @Nested
+      @DisplayName("{메서드명}")
+      class {MethodName} {
+          @Test
+          @DisplayName("{조건}하면 {결과}한다")
+          void {한글_조건}_{한글_결과}() {
+              // given
+              given({dependency}.{method}(...)).willReturn(...);
+              // when
+              var result = sut.{method}(...);
+              // then
+              assertThat(result).{검증};
+          }
+      }
+  }
+  ```
+
+- 테스트 실행 결과는 필터링해서만 컨텍스트에 남긴다. 전체 로그를
+  그대로 붙이지 말고, 실패 시엔 `FAILED`/`Exception` 라인 주변만
+  (예: `grep -A 10 "FAILED\|Exception"`), 성공 시엔 "N/N 통과" 한 줄만
+  남긴다.
+- 실행 명령 예: `./gradlew test --tests {ClassName} 2>&1 | grep -E
+  "PASSED|FAILED|Exception"` (전체 stdout을 그대로 붙이지 않기 위함)
+- 환경변수 문제로 로컬 테스트가 막히면, export로 임시 우회하지 말고
+  `application-local.yml`에 기본값이 빠진 건 아닌지 먼저 확인한다
+  (매 세션 재발견 방지).
+
 ## 엔티티 변경 시 추가 작업
 
 - `docs/erd/`에 ERD 문서가 존재하면 함께 갱신한다 (현재 RECAP은
