@@ -23,4 +23,26 @@ class CaptureObjectKeyGeneratorTest {
 
         assertThat(first).isNotEqualTo(second);
     }
+
+    @Test
+    @DisplayName("belongsTo는 자신이 generate한 objectKey에 대해 true를 반환한다")
+    void belongsTo는_자신이_generate한_objectKey에_대해_true를_반환한다() {
+        String objectKey = CaptureObjectKeyGenerator.generate(1L);
+
+        assertThat(CaptureObjectKeyGenerator.belongsTo(objectKey, 1L)).isTrue();
+    }
+
+    @Test
+    @DisplayName("belongsTo는 다른 userId의 objectKey에 대해 false를 반환한다")
+    void belongsTo는_다른_userId의_objectKey에_대해_false를_반환한다() {
+        String objectKey = CaptureObjectKeyGenerator.generate(2L);
+
+        assertThat(CaptureObjectKeyGenerator.belongsTo(objectKey, 1L)).isFalse();
+    }
+
+    @Test
+    @DisplayName("belongsTo는 null objectKey에 대해 false를 반환한다")
+    void belongsTo는_null_objectKey에_대해_false를_반환한다() {
+        assertThat(CaptureObjectKeyGenerator.belongsTo(null, 1L)).isFalse();
+    }
 }
