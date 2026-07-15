@@ -16,6 +16,8 @@ LLD를 기반으로 코드를 구현한다. 구현 완료 후 반드시 **review
 - `CLAUDE.md`, `docs/conventions/domain-design-principles.md`,
   `docs/swagger/api-spec-guide.md`의 규칙을 함께 따른다.
 - 구현 단위는 LLD 하나 = PR 하나를 원칙으로 한다.
+- 문서 확인이 필요해도 자체적으로 웹 검색하지 않는다. 무엇을 왜 확인해야 하는지 먼저 보고하고 허가를 받는다.
+- STAGE 중간 보고에는 코드 전문 대신 변경 파일 경로와 한두 줄 요약만 남긴다.
 
 ## 절차
 
