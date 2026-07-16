@@ -1,7 +1,9 @@
 package cmc.recap.card.controller;
 
+import cmc.recap.card.dto.request.FavoriteRequest;
 import cmc.recap.card.dto.request.OrganizeRequest;
 import cmc.recap.card.dto.request.UploadUrlsRequest;
+import cmc.recap.card.dto.response.CaptureDetailResponse;
 import cmc.recap.card.dto.response.OrganizeResponse;
 import cmc.recap.card.dto.response.OrganizeStatusResponse;
 import cmc.recap.card.dto.response.PendingResultResponse;
@@ -13,7 +15,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -73,6 +77,31 @@ public class CaptureController implements CaptureApiDocs {
     public ResponseEntity<Void> ackOrganizeResult(
             @AuthenticationPrincipal Long userId, @PathVariable Long batchId) {
         organizeService.ack(userId, batchId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{captureId}")
+    @Override
+    public ResponseEntity<ApiResponse<CaptureDetailResponse>> getDetail(
+            @AuthenticationPrincipal Long userId, @PathVariable Long captureId) {
+        CaptureDetailResponse response = captureService.getDetail(userId, captureId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PatchMapping("/{captureId}/favorite")
+    @Override
+    public ResponseEntity<Void> updateFavorite(
+            @AuthenticationPrincipal Long userId, @PathVariable Long captureId,
+            @Valid @RequestBody FavoriteRequest request) {
+        captureService.updateFavorite(userId, captureId, request.isFavorite());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{captureId}")
+    @Override
+    public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal Long userId, @PathVariable Long captureId) {
+        captureService.delete(userId, captureId);
         return ResponseEntity.noContent().build();
     }
 }
