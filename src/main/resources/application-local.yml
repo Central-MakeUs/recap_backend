@@ -34,12 +34,12 @@ swagger:
     url: http://localhost:8080
 
 jwt:
-  secret: ${JWT_SECRET}
-  access-token-expiry: ${JWT_ACCESS_TOKEN_EXPIRY}
-  refresh-token-expiry: ${JWT_REFRESH_TOKEN_EXPIRY}
+  secret: ${JWT_SECRET:local-dev-dummy-jwt-secret-key-not-real-please-set-env-1234}
+  access-token-expiry: ${JWT_ACCESS_TOKEN_EXPIRY:30m}
+  refresh-token-expiry: ${JWT_REFRESH_TOKEN_EXPIRY:14d}
 
 apple:
-  bundle-id: ${APPLE_BUNDLE_ID}
+  bundle-id: ${APPLE_BUNDLE_ID:com.recap.local-dev-dummy}
 
 aws:
   region: ${AWS_REGION:ap-northeast-2}
