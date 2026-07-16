@@ -14,3 +14,4 @@
 | [LLD-0001](LLD-0001-oauth-social-login.md) | 카카오/Apple 소셜 로그인 | Accepted (개정) | 2026-07-10 (최초 2026-07-07) |
 | [LLD-0002](LLD-0002-capture-upload-organize-explore.md) | 스크린샷 업로드 · 정리 · 탐색 플로우 | Accepted | 2026-07-13 |
 | [LLD-0003](LLD-0003-ai-image-analysis-module.md) | AI 이미지 분석 모듈 (Gemini 구현체) | Accepted | 2026-07-15 (소급 기록) |
+| [LLD-0005](LLD-0005-capture-detail-favorite-delete.md) | 정보카드 상세조회 · 즐겨찾기 · 삭제 API | Accepted | 2026-07-17 |

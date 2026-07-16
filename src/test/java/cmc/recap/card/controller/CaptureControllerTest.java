@@ -2,13 +2,18 @@ package cmc.recap.card.controller;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import cmc.recap.card.domain.BatchStatus;
+import cmc.recap.card.domain.CardType;
+import cmc.recap.card.dto.response.CaptureDetailResponse;
 import cmc.recap.card.dto.response.OrganizeResponse;
 import cmc.recap.card.dto.response.OrganizeStatusResponse;
 import cmc.recap.card.dto.response.PendingResultResponse;
@@ -19,6 +24,7 @@ import cmc.recap.card.service.OrganizeService;
 import cmc.recap.global.exception.ErrorCode;
 import cmc.recap.global.exception.model.BusinessException;
 import cmc.recap.global.jwt.JwtProvider;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -218,5 +224,91 @@ class CaptureControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(organizeService).ack(1L, 123L);
+    }
+
+    @Test
+    @DisplayName("정보카드 상세를 조회하면 200과 상세 정보를 응답한다")
+    void 정보카드_상세를_조회하면_200과_상세_정보를_응답한다() throws Exception {
+        given(captureService.getDetail(1L, 10L)).willReturn(new CaptureDetailResponse(
+                10L, CardType.JOB, "title", "summary", "body",
+                "https://s3.example.com/original", false, Instant.now()));
+
+        mockMvc.perform(get("/api/v1/captures/10")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.captureId").value(10))
+                .andExpect(jsonPath("$.data.title").value("title"))
+                .andExpect(jsonPath("$.data.originalImageUrl").value("https://s3.example.com/original"));
+    }
+
+    @Test
+    @DisplayName("다른 유저의 정보카드를 조회하면 404와 NOT_FOUND를 응답한다")
+    void 다른_유저의_정보카드를_조회하면_404와_NOT_FOUND를_응답한다() throws Exception {
+        given(captureService.getDetail(1L, 10L)).willThrow(new BusinessException(ErrorCode.NOT_FOUND));
+
+        mockMvc.perform(get("/api/v1/captures/10")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error.code").value("NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("즐겨찾기를 true로 설정하면 204를 응답한다")
+    void 즐겨찾기를_true로_설정하면_204를_응답한다() throws Exception {
+        mockMvc.perform(patch("/api/v1/captures/10/favorite")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"isFavorite\":true}"))
+                .andExpect(status().isNoContent());
+
+        verify(captureService).updateFavorite(1L, 10L, true);
+    }
+
+    @Test
+    @DisplayName("즐겨찾기를 false로 설정하면 204를 응답한다")
+    void 즐겨찾기를_false로_설정하면_204를_응답한다() throws Exception {
+        mockMvc.perform(patch("/api/v1/captures/10/favorite")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"isFavorite\":false}"))
+                .andExpect(status().isNoContent());
+
+        verify(captureService).updateFavorite(1L, 10L, false);
+    }
+
+    @Test
+    @DisplayName("다른 유저의 정보카드 즐겨찾기를 변경하면 404와 NOT_FOUND를 응답한다")
+    void 다른_유저의_정보카드_즐겨찾기를_변경하면_404와_NOT_FOUND를_응답한다() throws Exception {
+        willThrow(new BusinessException(ErrorCode.NOT_FOUND))
+                .given(captureService).updateFavorite(1L, 10L, true);
+
+        mockMvc.perform(patch("/api/v1/captures/10/favorite")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"isFavorite\":true}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error.code").value("NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("정보카드를 삭제하면 204를 응답한다")
+    void 정보카드를_삭제하면_204를_응답한다() throws Exception {
+        mockMvc.perform(delete("/api/v1/captures/10")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isNoContent());
+
+        verify(captureService).delete(1L, 10L);
+    }
+
+    @Test
+    @DisplayName("다른 유저의 정보카드를 삭제하면 404와 NOT_FOUND를 응답한다")
+    void 다른_유저의_정보카드를_삭제하면_404와_NOT_FOUND를_응답한다() throws Exception {
+        willThrow(new BusinessException(ErrorCode.NOT_FOUND))
+                .given(captureService).delete(1L, 10L);
+
+        mockMvc.perform(delete("/api/v1/captures/10")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error.code").value("NOT_FOUND"));
     }
 }

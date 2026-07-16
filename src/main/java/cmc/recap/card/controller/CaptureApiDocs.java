@@ -1,7 +1,9 @@
 package cmc.recap.card.controller;
 
+import cmc.recap.card.dto.request.FavoriteRequest;
 import cmc.recap.card.dto.request.OrganizeRequest;
 import cmc.recap.card.dto.request.UploadUrlsRequest;
+import cmc.recap.card.dto.response.CaptureDetailResponse;
 import cmc.recap.card.dto.response.OrganizeResponse;
 import cmc.recap.card.dto.response.OrganizeStatusResponse;
 import cmc.recap.card.dto.response.PendingResultResponse;
@@ -64,4 +66,28 @@ public interface CaptureApiDocs {
             ErrorCode.NOT_FOUND
     })
     ResponseEntity<Void> ackOrganizeResult(Long userId, Long batchId);
+
+    @Operation(summary = "정보카드 상세 조회")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"))
+    @ApiErrorCodes({
+            ErrorCode.NOT_FOUND
+    })
+    ResponseEntity<ApiResponse<CaptureDetailResponse>> getDetail(Long userId, Long captureId);
+
+    @Operation(summary = "즐겨찾기 설정/해제")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "변경 성공"))
+    @ApiErrorCodes({
+            ErrorCode.NOT_FOUND
+    })
+    ResponseEntity<Void> updateFavorite(Long userId, Long captureId, FavoriteRequest request);
+
+    @Operation(summary = "정보카드 삭제")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "삭제 성공"))
+    @ApiErrorCodes({
+            ErrorCode.NOT_FOUND
+    })
+    ResponseEntity<Void> delete(Long userId, Long captureId);
 }
