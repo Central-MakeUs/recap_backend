@@ -52,4 +52,4 @@ aws:
 
 gemini:
   api-key: ${GEMINI_API_KEY}
-  model-name: ${GEMINI_MODEL_NAME:gemini-2.5-flash}
+  model-name: ${GEMINI_MODEL_NAME:gemini-3.5-flash}
