@@ -21,16 +21,18 @@ PM 검토 결과 이번 스프린트로 앞당겨졌다(팀 논의 결과 반영
 ### API
 
 ```
-GET /api/v1/search?q={검색어}&scope=all|favorite|etc|type&typeCode={선택}&page=0&size=20
+GET /api/v1/search?q={검색어}&scope=ALL|FAVORITE|ETC|TYPE&typeCode={선택}&page=0&size=20
 ```
 
 - `q`: 서비스 레이어에서 trim + 중간 연속 공백을 1칸으로 정규화 후
   1~100자 검증. 공백만 남으면(빈 문자열이 되면) `INVALID_INPUT`.
-- `scope=type`일 때 `typeCode` 필수, 없으면 `INVALID_INPUT`.
+- `scope=TYPE`일 때 `typeCode` 필수, 없으면 `INVALID_INPUT`.
 - 대소문자 무시 매칭(SQL `lower()` 명시 사용 — DB collation에
   의존하지 않기 위함).
-- `scope`가 `all`/`favorite`/`etc`/`type` 외의 문자열이면
-  `INVALID_INPUT`으로 거부한다(관대하게 `all`로 처리하지 않음).
+- `scope`는 `SearchScope` enum(`ALL`/`FAVORITE`/`ETC`/`TYPE`)으로
+  바인딩해 Web 계층에서 형식 검증(없음/잘못된 값)을 자동 처리하고,
+  Service는 `scope=TYPE` + `typeCode` 누락 같은 필드 간 조합 규칙만
+  검증한다.
 
 ### 매칭·랭킹 쿼리 — 단일 쿼리 + 조건부 바인드 파라미터
 
@@ -66,10 +68,10 @@ Page<InfoCard> search(@Param("user") User user, @Param("q") String q,
 `scope` → 파라미터 매핑 (서비스 레이어):
 
 ```
-all      → favoriteOnly=false, filterType=null
-favorite → favoriteOnly=true,  filterType=null
-etc      → favoriteOnly=false, filterType=CardType.ETC
-type     → favoriteOnly=false, filterType={요청의 typeCode}
+ALL      → favoriteOnly=false, filterType=null
+FAVORITE → favoriteOnly=true,  filterType=null
+ETC      → favoriteOnly=false, filterType=CardType.ETC
+TYPE     → favoriteOnly=false, filterType={요청의 typeCode}
 ```
 
 🟡 **확인 필요(구현 시)**: `order by`에 `CASE`가 들어간 JPQL을 Spring
