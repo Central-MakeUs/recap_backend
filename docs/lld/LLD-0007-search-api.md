@@ -172,9 +172,9 @@ public record SearchResponse(long count, boolean hasNext, List<SearchResultRespo
 - 발췌 기능이 격리돼 있어 일정 압박 시 부담 없이 축소 가능.
 
 ### 부정 / 트레이드오프
-- MySQL `LIKE` 기반이라 대량 데이터에서는 성능이 떨어질 수 있음
-  (지금 유저당 데이터 규모에서는 문제없음, FULLTEXT 인덱스나
-  검색 엔진 도입은 후속 과제).
+- MySQL `LIKE` 기반이라 대량 데이터에서는 성능이 떨어질 수 있음. 검색
+  기술 전략(FULLTEXT/전용 검색엔진 대비 LIKE 채택 이유)은
+  [ADR-0014](../adr/ADR-0014-search-mysql-like-strategy.md) 참고.
 - `order by CASE`가 포함된 쿼리라 인덱스 활용이 제한적 — 지금 규모에선
   무시할 수준.
 

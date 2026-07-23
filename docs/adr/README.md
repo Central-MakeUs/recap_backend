@@ -26,3 +26,4 @@
 | [ADR-0011](ADR-0011-infocard-flat-summary-fields.md) | InfoCard 표시 필드(title/summary/body)를 평문 컬럼으로 확정 | Accepted | 2026-07-13 |
 | [ADR-0012](ADR-0012-presigned-url-image-upload.md) | 원본 이미지 업로드는 Presigned URL 방식으로 확정 | Accepted | 2026-07-13 |
 | [ADR-0013](ADR-0013-image-analysis-pipeline.md) | 이미지 분석 파이프라인 구조 — 1단계 통합형 + ImageAnalysisProvider 인터페이스 | Accepted | 2026-07-15 |
+| [ADR-0014](ADR-0014-search-mysql-like-strategy.md) | 검색 기능은 MySQL LIKE 기반으로 시작 (전용 검색엔진 도입 보류) | Accepted | 2026-07-19 |
