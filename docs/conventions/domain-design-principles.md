@@ -226,6 +226,21 @@ if (value.codePointCount(0, value.length()) > maxLength) {
 }
 ```
 
+## 11. `@DataJpaTest` 슬라이스 테스트 규칙
+
+`@DataJpaTest`로 리포지토리 슬라이스 테스트를 작성할 때는
+`@Import(JpaAuditingConfig.class)`를 반드시 함께 선언한다. 안 그러면
+`@CreatedDate`/`@LastModifiedDate` 필드가 채워지지 않아 not-null 제약
+위반으로 실패한다 (`InfoCardRepositoryTest`에서 실제로 겪은 문제).
+
+```java
+@DataJpaTest
+@Import(JpaAuditingConfig.class)
+class InfoCardRepositoryTest {
+    // ...
+}
+```
+
 ## 체크리스트 (구현 시 자가 점검)
 
 - [ ] 이 엔티티는 `new`로 직접 생성 가능한가? → 가능하면 위반
