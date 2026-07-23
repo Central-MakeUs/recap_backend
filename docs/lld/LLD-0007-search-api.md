@@ -29,6 +29,8 @@ GET /api/v1/search?q={검색어}&scope=all|favorite|etc|type&typeCode={선택}&p
 - `scope=type`일 때 `typeCode` 필수, 없으면 `INVALID_INPUT`.
 - 대소문자 무시 매칭(SQL `lower()` 명시 사용 — DB collation에
   의존하지 않기 위함).
+- `scope`가 `all`/`favorite`/`etc`/`type` 외의 문자열이면
+  `INVALID_INPUT`으로 거부한다(관대하게 `all`로 처리하지 않음).
 
 ### 매칭·랭킹 쿼리 — 단일 쿼리 + 조건부 바인드 파라미터
 
@@ -179,3 +181,11 @@ public record SearchResponse(long count, boolean hasNext, List<SearchResultRespo
 - [ ] 발췌 길이(20자)는 임시값, 디자인 확정 후 조정 가능
 - [ ] 데이터가 크게 늘어나면 `LIKE` 기반 검색을 FULLTEXT 인덱스 또는
       전용 검색 엔진으로 전환할지 재검토
+- [ ] title/summary/body 매칭 여부를 서비스 레이어에서
+      `SearchHighlighter`로 재판정하는 방식은, DB의 SQL `LIKE` 기반
+      판정과 실행 엔진이 달라(MySQL `lower()` vs Java
+      `toLowerCase()`) 극히 드문 로케일 관련 경계 케이스에서 서로
+      다른 결론을 낼 이론적 가능성이 있다. 지금 RECAP 데이터 특성
+      (한글 위주)에서는 실질적 위험이 낮다고 판단해 지금은 그대로
+      두되, 검색 결과 이상 신고가 들어오면 우선 확인할 후보로
+      기록해둔다.
