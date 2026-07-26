@@ -151,6 +151,15 @@ class SearchServiceTest {
                     .extracting(e -> ((BusinessException) e).getErrorCode())
                     .isEqualTo(ErrorCode.INVALID_INPUT);
         }
+
+        @Test
+        @DisplayName("scope=TYPE인데 typeCode가 ETC이면 INVALID_INPUT 예외를 던진다")
+        void scope가_TYPE인데_typeCode가_ETC이면_INVALID_INPUT_예외를_던진다() {
+            assertThatThrownBy(() -> searchService.search(1L, "카페", SearchScope.TYPE, CardType.ETC, 0, 20))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting(e -> ((BusinessException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INVALID_INPUT);
+        }
     }
 
     @Nested
