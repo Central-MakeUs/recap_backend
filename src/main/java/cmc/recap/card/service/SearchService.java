@@ -56,6 +56,9 @@ public class SearchService {
             case FAVORITE -> new ScopeParams(true, null);
             case ETC -> new ScopeParams(false, CardType.ETC);
             case TYPE -> {
+                if (typeCode == CardType.ETC) {
+                    throw new BusinessException(ErrorCode.INVALID_INPUT);
+                }
                 if (typeCode == null) {
                     throw new BusinessException(ErrorCode.INVALID_INPUT);
                 }

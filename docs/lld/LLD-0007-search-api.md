@@ -27,6 +27,10 @@ GET /api/v1/search?q={검색어}&scope=ALL|FAVORITE|ETC|TYPE&typeCode={선택}&p
 - `q`: 서비스 레이어에서 trim + 중간 연속 공백을 1칸으로 정규화 후
   1~100자 검증. 공백만 남으면(빈 문자열이 되면) `INVALID_INPUT`.
 - `scope=TYPE`일 때 `typeCode` 필수, 없으면 `INVALID_INPUT`.
+- `scope=TYPE`일 때 `typeCode=ETC`가 오면 `INVALID_INPUT`으로 거부한다
+  (`StorageService.getTypeDetail()`과 동일한 정책 — ETC는 `scope=ETC`로
+  접근하도록 일원화한다. `StorageService`에 이미 존재하는 동일 패턴을
+  그대로 재사용).
 - 대소문자 무시 매칭(SQL `lower()` 명시 사용 — DB collation에
   의존하지 않기 위함).
 - `scope`는 `SearchScope` enum(`ALL`/`FAVORITE`/`ETC`/`TYPE`)으로

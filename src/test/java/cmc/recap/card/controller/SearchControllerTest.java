@@ -102,6 +102,21 @@ class SearchControllerTest {
     }
 
     @Test
+    @DisplayName("scope=TYPE이고 typeCode=ETC이면 400과 INVALID_INPUT을 응답한다")
+    void scope가_TYPE이고_typeCode가_ETC이면_400과_INVALID_INPUT을_응답한다() throws Exception {
+        willThrow(new BusinessException(ErrorCode.INVALID_INPUT))
+                .given(searchService).search(eq(1L), eq("카페"), eq(SearchScope.TYPE), eq(CardType.ETC), eq(0), eq(20));
+
+        mockMvc.perform(get("/api/v1/search")
+                        .param("q", "카페")
+                        .param("scope", "TYPE")
+                        .param("typeCode", "ETC")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code").value("INVALID_INPUT"));
+    }
+
+    @Test
     @DisplayName("인증 없이 요청하면 401을 응답한다")
     void 인증_없이_요청하면_401을_응답한다() throws Exception {
         mockMvc.perform(get("/api/v1/search")
