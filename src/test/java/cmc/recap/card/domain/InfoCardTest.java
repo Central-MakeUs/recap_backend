@@ -76,4 +76,58 @@ class InfoCardTest {
         assertThat(card.isFavorite()).isFalse();
         assertThat(card.getFavoritedAt()).isNull();
     }
+
+    @Test
+    @DisplayName("updateBody는 정상 수정 시 bodyEdited를 true로, bodyEditedAt을 갱신한다")
+    void updateBody는_정상_수정_시_bodyEdited를_true로_bodyEditedAt을_갱신한다() {
+        InfoCard card = InfoCard.create(
+                user, CardType.KNOWLEDGE, "title", "summary", "body",
+                "captures/1/uuid.jpg", "extracted", null);
+
+        card.updateBody("수정된 본문");
+
+        assertThat(card.getBody()).isEqualTo("수정된 본문");
+        assertThat(card.isBodyEdited()).isTrue();
+        assertThat(card.getBodyEditedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("updateBody는 1000자를 초과하면 예외를 던진다")
+    void updateBody는_1000자를_초과하면_예외를_던진다() {
+        InfoCard card = InfoCard.create(
+                user, CardType.KNOWLEDGE, "title", "summary", "body",
+                "captures/1/uuid.jpg", "extracted", null);
+        String tooLongBody = "가".repeat(InfoCard.BODY_MAX_LENGTH + 1);
+
+        assertThatThrownBy(() -> card.updateBody(tooLongBody))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_INPUT);
+    }
+
+    @Test
+    @DisplayName("updateBody는 null을 허용한다")
+    void updateBody는_null을_허용한다() {
+        InfoCard card = InfoCard.create(
+                user, CardType.KNOWLEDGE, "title", "summary", "body",
+                "captures/1/uuid.jpg", "extracted", null);
+
+        card.updateBody(null);
+
+        assertThat(card.getBody()).isNull();
+        assertThat(card.isBodyEdited()).isTrue();
+    }
+
+    @Test
+    @DisplayName("updateBody는 공백을 허용한다")
+    void updateBody는_공백을_허용한다() {
+        InfoCard card = InfoCard.create(
+                user, CardType.KNOWLEDGE, "title", "summary", "body",
+                "captures/1/uuid.jpg", "extracted", null);
+
+        card.updateBody("   ");
+
+        assertThat(card.getBody()).isEqualTo("   ");
+        assertThat(card.isBodyEdited()).isTrue();
+    }
 }

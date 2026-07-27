@@ -292,6 +292,28 @@ class CaptureControllerTest {
     }
 
     @Test
+    @DisplayName("본문을 수정하면 204를 응답한다")
+    void 본문을_수정하면_204를_응답한다() throws Exception {
+        mockMvc.perform(patch("/api/v1/captures/10/body")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"body\":\"수정된 본문\"}"))
+                .andExpect(status().isNoContent());
+
+        verify(captureService).updateBody(1L, 10L, "수정된 본문");
+    }
+
+    @Test
+    @DisplayName("인증 없이 본문을 수정하면 401을 응답한다")
+    void 인증_없이_본문을_수정하면_401을_응답한다() throws Exception {
+        mockMvc.perform(patch("/api/v1/captures/10/body")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"body\":\"수정된 본문\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error.code").value("OAUTH_VERIFICATION_FAILED"));
+    }
+
+    @Test
     @DisplayName("정보카드를 삭제하면 204를 응답한다")
     void 정보카드를_삭제하면_204를_응답한다() throws Exception {
         mockMvc.perform(delete("/api/v1/captures/10")
