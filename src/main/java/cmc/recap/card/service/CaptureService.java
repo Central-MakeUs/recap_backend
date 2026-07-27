@@ -79,6 +79,12 @@ public class CaptureService {
     }
 
     @Transactional
+    public void updateBody(Long userId, Long captureId, String body) {
+        InfoCard card = getOwnedCard(userId, captureId);
+        card.updateBody(body);
+    }
+
+    @Transactional
     public void report(Long userId, Long captureId, ReportReason reason) {
         InfoCard card = getOwnedCard(userId, captureId);
         if (reportRepository.existsByUserAndCaptureId(card.getUser(), captureId)) {

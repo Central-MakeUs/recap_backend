@@ -155,6 +155,19 @@ class CaptureServiceTest {
     }
 
     @Test
+    @DisplayName("updateBody는 다른 유저 소유면 NOT_FOUND를 던진다")
+    void updateBody는_다른_유저_소유면_NOT_FOUND를_던진다() {
+        User owner = userWithId(1L);
+        InfoCard card = cardWithId(10L, owner);
+        given(infoCardRepository.findById(10L)).willReturn(Optional.of(card));
+
+        assertThatThrownBy(() -> captureService.updateBody(2L, 10L, "수정된 본문"))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.NOT_FOUND);
+    }
+
+    @Test
     @DisplayName("delete는 소유자면 S3 원본 이미지와 InfoCard를 모두 삭제한다")
     void delete는_소유자면_S3_원본_이미지와_InfoCard를_모두_삭제한다() {
         User owner = userWithId(1L);

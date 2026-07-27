@@ -2,6 +2,7 @@ package cmc.recap.card.image;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import cmc.recap.card.domain.InfoCard;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +20,7 @@ class CardAnalysisPromptTest {
     @Test
     @DisplayName("build 하면 9개 유형 라벨이 전부 포함된다")
     void build_하면_9개_유형_라벨이_전부_포함된다() {
-        String prompt = CardAnalysisPrompt.build(CardAnalysisPrompt.BODY_MAX_LENGTH);
+        String prompt = CardAnalysisPrompt.build(InfoCard.BODY_MAX_LENGTH);
 
         assertThat(prompt).contains(
                 "JOB", "SHOPPING", "PLACE", "SCHEDULE", "KNOWLEDGE",
