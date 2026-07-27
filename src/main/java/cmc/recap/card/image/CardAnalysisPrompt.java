@@ -2,8 +2,6 @@ package cmc.recap.card.image;
 
 public final class CardAnalysisPrompt {
 
-    public static final int BODY_MAX_LENGTH = 1000;
-
     private static final String PLACEHOLDER = "{BODY_MAX_LENGTH}";
 
     private static final String TEMPLATE = """

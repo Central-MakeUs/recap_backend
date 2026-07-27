@@ -33,6 +33,7 @@ public class InfoCard extends BaseTimeEntity {
 
     public static final int TITLE_MAX_LENGTH = 30;
     public static final int SUMMARY_MAX_LENGTH = 80;
+    public static final int BODY_MAX_LENGTH = 1000;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -72,6 +73,12 @@ public class InfoCard extends BaseTimeEntity {
     @Column(name = "favorited_at")
     private Instant favoritedAt;
 
+    @Column(name = "body_edited", nullable = false)
+    private boolean bodyEdited;
+
+    @Column(name = "body_edited_at")
+    private Instant bodyEditedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organize_batch_id")
     private OrganizeBatch batch;
@@ -104,12 +111,25 @@ public class InfoCard extends BaseTimeEntity {
         return Collections.unmodifiableList(keywords);
     }
 
+    public void updateBody(String newBody) {
+        validateBody(newBody);
+        this.body = newBody;
+        this.bodyEdited = true;
+        this.bodyEditedAt = Instant.now();
+    }
+
     private static void validateTitle(String title) {
         if (title == null || title.isBlank()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "제목은 필수입니다.");
         }
         if (title.length() > TITLE_MAX_LENGTH) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "제목은 " + TITLE_MAX_LENGTH + "자를 초과할 수 없습니다.");
+        }
+    }
+
+    private static void validateBody(String body) {
+        if (body != null && body.length() > BODY_MAX_LENGTH) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "본문은 " + BODY_MAX_LENGTH + "자를 초과할 수 없습니다.");
         }
     }
 }

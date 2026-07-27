@@ -1,6 +1,7 @@
 package cmc.recap.card.image;
 
 import cmc.recap.card.domain.CardType;
+import cmc.recap.card.domain.InfoCard;
 import cmc.recap.global.exception.ErrorCode;
 import cmc.recap.global.exception.model.BusinessException;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -37,7 +38,7 @@ public class GeminiImageAnalysisProvider implements ImageAnalysisProvider {
     private static final String API_KEY_HEADER = "x-goog-api-key";
     private static final Duration RETRY_DELAY = Duration.ofMillis(500);
 
-    private static final String PROMPT = CardAnalysisPrompt.build(CardAnalysisPrompt.BODY_MAX_LENGTH);
+    private static final String PROMPT = CardAnalysisPrompt.build(InfoCard.BODY_MAX_LENGTH);
 
     private static final ResponseSchema RESPONSE_SCHEMA = buildResponseSchema();
 
