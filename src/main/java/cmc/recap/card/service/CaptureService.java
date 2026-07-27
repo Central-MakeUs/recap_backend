@@ -10,6 +10,9 @@ import cmc.recap.card.image.PresignedUploadInfo;
 import cmc.recap.card.repository.InfoCardRepository;
 import cmc.recap.global.exception.ErrorCode;
 import cmc.recap.global.exception.model.BusinessException;
+import cmc.recap.report.domain.Report;
+import cmc.recap.report.domain.ReportReason;
+import cmc.recap.report.repository.ReportRepository;
 import java.net.URL;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -25,16 +28,19 @@ public class CaptureService {
 
     private final ImagePresignedUrlProvider imagePresignedUrlProvider;
     private final InfoCardRepository infoCardRepository;
+    private final ReportRepository reportRepository;
     private final S3Client s3Client;
     private final String bucketName;
 
     public CaptureService(
             ImagePresignedUrlProvider imagePresignedUrlProvider,
             InfoCardRepository infoCardRepository,
+            ReportRepository reportRepository,
             S3Client s3Client,
             @Value("${aws.s3.bucket-name}") String bucketName) {
         this.imagePresignedUrlProvider = imagePresignedUrlProvider;
         this.infoCardRepository = infoCardRepository;
+        this.reportRepository = reportRepository;
         this.s3Client = s3Client;
         this.bucketName = bucketName;
     }
@@ -70,6 +76,15 @@ public class CaptureService {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, e);
         }
         infoCardRepository.delete(card);
+    }
+
+    @Transactional
+    public void report(Long userId, Long captureId, ReportReason reason) {
+        InfoCard card = getOwnedCard(userId, captureId);
+        if (reportRepository.existsByUserAndCaptureId(card.getUser(), captureId)) {
+            throw new BusinessException(ErrorCode.ALREADY_REPORTED);
+        }
+        reportRepository.save(Report.create(card.getUser(), card, reason));
     }
 
     private UploadItem issueUploadItem(Long userId) {

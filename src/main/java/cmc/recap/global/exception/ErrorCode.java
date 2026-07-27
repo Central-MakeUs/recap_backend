@@ -41,7 +41,10 @@ public enum ErrorCode {
     ORGANIZE_IN_PROGRESS(HttpStatus.CONFLICT, "이미 진행 중인 정리 작업이 있습니다"),
 
     // 회원탈퇴 (409)
-    ALREADY_WITHDRAWN(HttpStatus.CONFLICT, "이미 탈퇴한 회원입니다")
+    ALREADY_WITHDRAWN(HttpStatus.CONFLICT, "이미 탈퇴한 회원입니다"),
+
+    // 신고 (409)
+    ALREADY_REPORTED(HttpStatus.CONFLICT, "이미 신고한 카드입니다")
     ;
 
     private final HttpStatus httpStatus;

@@ -2,6 +2,7 @@ package cmc.recap.card.controller;
 
 import cmc.recap.card.dto.request.FavoriteRequest;
 import cmc.recap.card.dto.request.OrganizeRequest;
+import cmc.recap.card.dto.request.ReportRequest;
 import cmc.recap.card.dto.request.UploadUrlsRequest;
 import cmc.recap.card.dto.response.CaptureDetailResponse;
 import cmc.recap.card.dto.response.OrganizeResponse;
@@ -90,4 +91,13 @@ public interface CaptureApiDocs {
             ErrorCode.NOT_FOUND
     })
     ResponseEntity<Void> delete(Long userId, Long captureId);
+
+    @Operation(summary = "정보카드 신고")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "신고 성공"))
+    @ApiErrorCodes({
+            ErrorCode.NOT_FOUND,
+            ErrorCode.ALREADY_REPORTED
+    })
+    ResponseEntity<Void> report(Long userId, Long captureId, ReportRequest request);
 }

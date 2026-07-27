@@ -24,6 +24,7 @@ import cmc.recap.card.service.OrganizeService;
 import cmc.recap.global.exception.ErrorCode;
 import cmc.recap.global.exception.model.BusinessException;
 import cmc.recap.global.jwt.JwtProvider;
+import cmc.recap.report.domain.ReportReason;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -310,5 +311,27 @@ class CaptureControllerTest {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error.code").value("NOT_FOUND"));
+    }
+
+    @Test
+    @DisplayName("정보카드를 신고하면 204를 응답한다")
+    void 정보카드를_신고하면_204를_응답한다() throws Exception {
+        mockMvc.perform(post("/api/v1/captures/10/report")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"WRONG_TYPE\"}"))
+                .andExpect(status().isNoContent());
+
+        verify(captureService).report(1L, 10L, ReportReason.WRONG_TYPE);
+    }
+
+    @Test
+    @DisplayName("인증 없이 신고하면 401을 응답한다")
+    void 인증_없이_신고하면_401을_응답한다() throws Exception {
+        mockMvc.perform(post("/api/v1/captures/10/report")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"WRONG_TYPE\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error.code").value("OAUTH_VERIFICATION_FAILED"));
     }
 }

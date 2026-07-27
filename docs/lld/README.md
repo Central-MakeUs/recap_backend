@@ -20,3 +20,4 @@
 | [LLD-0007](LLD-0007-search-api.md) | 검색 API | Accepted | 2026-07-18 |
 | [LLD-0008](LLD-0008-body-type-templates.md) | body 유형별 구조화 템플릿 (프롬프트 개정) | Accepted | 2026-07-20 |
 | [LLD-0009](LLD-0009-user-withdrawal.md) | 회원탈퇴 API | Accepted | 2026-07-28 |
+| [LLD-0010](LLD-0010-inappropriate-content-report.md) | 부적절한 AI 결과 신고 기능 | Accepted | 2026-07-28 |
