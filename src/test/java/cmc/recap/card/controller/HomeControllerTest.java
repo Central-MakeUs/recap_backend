@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import cmc.recap.card.domain.CardType;
+import cmc.recap.card.dto.response.CapturePageResponse;
 import cmc.recap.card.dto.response.CaptureSummaryResponse;
 import cmc.recap.card.dto.response.HomeSummaryResponse;
 import cmc.recap.card.dto.response.TopTypeResponse;
@@ -65,6 +66,31 @@ class HomeControllerTest {
     @DisplayName("인증 없이 요청하면 401을 응답한다")
     void 인증_없이_요청하면_401을_응답한다() throws Exception {
         mockMvc.perform(get("/api/v1/home/summary"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error.code").value("OAUTH_VERIFICATION_FAILED"));
+    }
+
+    @Test
+    @DisplayName("최근 정리된 캡처 목록을 조회하면 200과 페이지 정보를 응답한다")
+    void 최근_정리된_캡처_목록을_조회하면_200과_페이지_정보를_응답한다() throws Exception {
+        CaptureSummaryResponse capture = new CaptureSummaryResponse(
+                1L, "title", "summary", CardType.JOB, "https://s3.example.com/a.jpg", false, Instant.now());
+        given(homeService.getRecentCapturesPage(1L, 0, 20))
+                .willReturn(CapturePageResponse.of(1L, false, List.of(capture)));
+
+        mockMvc.perform(get("/api/v1/home/recent-captures?page=0&size=20")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.count").value(1))
+                .andExpect(jsonPath("$.data.hasNext").value(false))
+                .andExpect(jsonPath("$.data.items[0].captureId").value(1));
+    }
+
+    @Test
+    @DisplayName("인증 없이 최근 정리된 캡처 목록을 요청하면 401을 응답한다")
+    void 인증_없이_최근_정리된_캡처_목록을_요청하면_401을_응답한다() throws Exception {
+        mockMvc.perform(get("/api/v1/home/recent-captures"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error.code").value("OAUTH_VERIFICATION_FAILED"));
     }

@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 
 import cmc.recap.card.domain.CardType;
 import cmc.recap.card.domain.InfoCard;
+import cmc.recap.card.dto.response.CapturePageResponse;
 import cmc.recap.card.dto.response.HomeSummaryResponse;
 import cmc.recap.card.image.ImagePresignedUrlProvider;
 import cmc.recap.card.repository.InfoCardRepository;
@@ -27,8 +28,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -202,6 +209,55 @@ class HomeServiceTest {
         HomeSummaryResponse response = homeService.getSummary(1L);
 
         assertThat(response.hasAnyCapture()).isTrue();
+    }
+
+    @Test
+    @DisplayName("getRecentCapturesPage는 30일 전 since 값을 리포지토리에 전달한다")
+    void getRecentCapturesPage는_30일_전_since_값을_리포지토리에_전달한다() {
+        given(infoCardRepository.findByUserAndCreatedAtAfter(any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of()));
+
+        homeService.getRecentCapturesPage(1L, 0, 20);
+
+        ArgumentCaptor<Instant> sinceCaptor = ArgumentCaptor.forClass(Instant.class);
+        verify(infoCardRepository).findByUserAndCreatedAtAfter(any(), sinceCaptor.capture(), any());
+        Instant expected = Instant.now().minus(30, ChronoUnit.DAYS);
+        assertThat(sinceCaptor.getValue())
+                .isCloseTo(expected, new org.assertj.core.data.TemporalUnitWithinOffset(5, ChronoUnit.SECONDS));
+    }
+
+    @Test
+    @DisplayName("getRecentCapturesPage는 hasNext를 Page 결과 그대로 반환한다")
+    void getRecentCapturesPage는_hasNext를_Page_결과_그대로_반환한다() {
+        User user = userWithId(1L);
+        List<InfoCard> cards = List.of(
+                cardWithId(1L, user, CardType.JOB, Instant.now()),
+                cardWithId(2L, user, CardType.JOB, Instant.now()));
+        Page<InfoCard> firstPage = new PageImpl<>(cards, PageRequest.of(0, 2), 3);
+        Page<InfoCard> lastPage = new PageImpl<>(cards, PageRequest.of(1, 2), 3);
+        given(infoCardRepository.findByUserAndCreatedAtAfter(any(), any(), eq(PageRequest.of(0, 2,
+                Sort.by("createdAt").descending())))).willReturn(firstPage);
+        given(infoCardRepository.findByUserAndCreatedAtAfter(any(), any(), eq(PageRequest.of(1, 2,
+                Sort.by("createdAt").descending())))).willReturn(lastPage);
+
+        CapturePageResponse firstResponse = homeService.getRecentCapturesPage(1L, 0, 2);
+        CapturePageResponse lastResponse = homeService.getRecentCapturesPage(1L, 1, 2);
+
+        assertThat(firstResponse.hasNext()).isTrue();
+        assertThat(lastResponse.hasNext()).isFalse();
+    }
+
+    @Test
+    @DisplayName("getRecentCapturesPage는 createdAt 내림차순 정렬로 조회한다")
+    void getRecentCapturesPage는_createdAt_내림차순_정렬로_조회한다() {
+        given(infoCardRepository.findByUserAndCreatedAtAfter(any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of()));
+
+        homeService.getRecentCapturesPage(1L, 0, 20);
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(infoCardRepository).findByUserAndCreatedAtAfter(any(), any(), pageableCaptor.capture());
+        assertThat(pageableCaptor.getValue().getSort()).isEqualTo(Sort.by("createdAt").descending());
     }
 
     private User userWithId(Long id) {
