@@ -17,6 +17,8 @@ public interface InfoCardRepository extends JpaRepository<InfoCard, Long> {
 
     List<InfoCard> findByBatch(OrganizeBatch batch);
 
+    List<InfoCard> findByUser(User user);
+
     List<InfoCard> findTop3ByUserOrderByCreatedAtDesc(User user);
 
     List<InfoCard> findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(User user);
