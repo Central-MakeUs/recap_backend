@@ -6,7 +6,9 @@ import java.time.Instant;
 
 public record CaptureDetailResponse(
         Long captureId, CardType typeCode, String title, String summary,
-        String body, String originalImageUrl, boolean isFavorite, Instant organizedAt
+        String body,
+        String originalImageUrl, // 원본 이미지 만료(1개월) 시 null. 값이 있는데 로딩 실패한 경우와는 구분해야 함
+        boolean isFavorite, Instant organizedAt
 ) {
     public static CaptureDetailResponse from(InfoCard card, String originalImageUrl) {
         return new CaptureDetailResponse(

@@ -103,6 +103,24 @@ class HomeServiceTest {
     }
 
     @Test
+    @DisplayName("favorites는 originalImageKey가 null이면 presigned URL 발급 없이 thumbnailUrl을 null로 반환한다")
+    void favorites는_originalImageKey가_null이면_presigned_URL_발급_없이_thumbnailUrl을_null로_반환한다() {
+        User user = userWithId(1L);
+        InfoCard expired = cardWithId(1L, user, CardType.JOB, Instant.now());
+        expired.expireOriginalImage();
+        given(infoCardRepository.findTop3ByUserOrderByCreatedAtDesc(any())).willReturn(List.of());
+        given(infoCardRepository.findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(any()))
+                .willReturn(List.of(expired));
+        given(infoCardRepository.countByTypeExcludingEtc(any(), eq(CardType.ETC))).willReturn(List.of());
+        given(infoCardRepository.existsByUser(any())).willReturn(true);
+
+        HomeSummaryResponse response = homeService.getSummary(1L);
+
+        assertThat(response.favorites().get(0).thumbnailUrl()).isNull();
+        verify(imagePresignedUrlProvider, never()).issueDownloadUrl(anyString());
+    }
+
+    @Test
     @DisplayName("topTypes는 리포지토리 조회 시 ETC를 제외 조건으로 전달한다")
     void topTypes는_리포지토리_조회_시_ETC를_제외_조건으로_전달한다() {
         given(infoCardRepository.findTop3ByUserOrderByCreatedAtDesc(any())).willReturn(List.of());

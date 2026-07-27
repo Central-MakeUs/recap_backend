@@ -4,6 +4,7 @@ import cmc.recap.card.domain.CardType;
 import cmc.recap.card.domain.InfoCard;
 import cmc.recap.card.domain.OrganizeBatch;
 import cmc.recap.user.domain.User;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -42,6 +43,8 @@ public interface InfoCardRepository extends JpaRepository<InfoCard, Long> {
             @Param("user") User user, @Param("excludedType") CardType excludedType);
 
     Optional<InfoCard> findFirstByUserAndTypeOrderByCreatedAtDesc(User user, CardType type);
+
+    List<InfoCard> findByCreatedAtBeforeAndOriginalImageKeyIsNotNull(Instant cutoff);
 
     @Query("""
         select c from InfoCard c

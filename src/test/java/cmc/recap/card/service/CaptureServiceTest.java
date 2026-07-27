@@ -91,6 +91,20 @@ class CaptureServiceTest {
     }
 
     @Test
+    @DisplayName("getDetail은 originalImageKey가 null이면 presigned URL 발급 없이 originalImageUrl을 null로 반환한다")
+    void getDetail은_originalImageKey가_null이면_presigned_URL_발급_없이_originalImageUrl을_null로_반환한다() {
+        User owner = userWithId(1L);
+        InfoCard card = cardWithId(10L, owner);
+        card.expireOriginalImage();
+        given(infoCardRepository.findById(10L)).willReturn(Optional.of(card));
+
+        CaptureDetailResponse response = captureService.getDetail(1L, 10L);
+
+        assertThat(response.originalImageUrl()).isNull();
+        verify(imagePresignedUrlProvider, never()).issueDownloadUrl(anyString());
+    }
+
+    @Test
     @DisplayName("getDetail은 다른 유저 소유면 NOT_FOUND를 던진다")
     void getDetail은_다른_유저_소유면_NOT_FOUND를_던진다() {
         User owner = userWithId(1L);
@@ -180,6 +194,20 @@ class CaptureServiceTest {
         verify(s3Client).deleteObject(captor.capture());
         assertThat(captor.getValue().bucket()).isEqualTo(BUCKET_NAME);
         assertThat(captor.getValue().key()).isEqualTo("captures/1/a.jpg");
+        verify(infoCardRepository).delete(card);
+    }
+
+    @Test
+    @DisplayName("delete는 originalImageKey가 null이면 S3 삭제 없이 InfoCard만 삭제한다")
+    void delete는_originalImageKey가_null이면_S3_삭제_없이_InfoCard만_삭제한다() {
+        User owner = userWithId(1L);
+        InfoCard card = cardWithId(10L, owner);
+        card.expireOriginalImage();
+        given(infoCardRepository.findById(10L)).willReturn(Optional.of(card));
+
+        captureService.delete(1L, 10L);
+
+        verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
         verify(infoCardRepository).delete(card);
     }
 

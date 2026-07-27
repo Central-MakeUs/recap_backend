@@ -22,3 +22,4 @@
 | [LLD-0009](LLD-0009-user-withdrawal.md) | 회원탈퇴 API | Accepted | 2026-07-28 |
 | [LLD-0010](LLD-0010-inappropriate-content-report.md) | 부적절한 AI 결과 신고 기능 | Accepted | 2026-07-28 |
 | [LLD-0011](LLD-0011-capture-body-edit.md) | 정보카드 본문(body) 수정 API | Accepted | 2026-07-28 |
+| [LLD-0012](LLD-0012-image-expiration-batch.md) | 원본 이미지 자동 만료 삭제 배치 | Accepted | 2026-07-28 |

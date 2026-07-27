@@ -54,15 +54,18 @@ public class UserService {
             return;
         }
         List<ObjectIdentifier> objectIds = cards.stream()
+                .filter(card -> card.getOriginalImageKey() != null)
                 .map(card -> ObjectIdentifier.builder().key(card.getOriginalImageKey()).build())
                 .toList();
-        try {
-            s3Client.deleteObjects(DeleteObjectsRequest.builder()
-                    .bucket(bucketName)
-                    .delete(Delete.builder().objects(objectIds).build())
-                    .build());
-        } catch (SdkException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e);
+        if (!objectIds.isEmpty()) {
+            try {
+                s3Client.deleteObjects(DeleteObjectsRequest.builder()
+                        .bucket(bucketName)
+                        .delete(Delete.builder().objects(objectIds).build())
+                        .build());
+            } catch (SdkException e) {
+                throw new BusinessException(ErrorCode.INTERNAL_ERROR, e);
+            }
         }
         infoCardRepository.deleteAll(cards);
     }

@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import cmc.recap.card.domain.CardType;
@@ -71,6 +72,26 @@ class StorageServiceTest {
 
             assertThat(response.items()).extracting("captureId").containsExactly(1L, 2L);
             assertThat(response.count()).isEqualTo(2);
+        }
+    }
+
+    @Nested
+    @DisplayName("originalImageKey null 처리")
+    class NullOriginalImageKey {
+
+        @Test
+        @DisplayName("originalImageKey가 null이면 presigned URL 발급 없이 thumbnailUrl을 null로 반환한다")
+        void originalImageKey가_null이면_presigned_URL_발급_없이_thumbnailUrl을_null로_반환한다() {
+            User user = userWithId(1L);
+            InfoCard expired = cardWithId(1L, user, CardType.JOB);
+            expired.expireOriginalImage();
+            given(infoCardRepository.findByUserAndFavoriteTrueOrderByFavoritedAtDesc(any()))
+                    .willReturn(List.of(expired));
+
+            CaptureListResponse response = storageService.getFavorites(1L);
+
+            assertThat(response.items().get(0).thumbnailUrl()).isNull();
+            verify(imagePresignedUrlProvider, never()).issueDownloadUrl(anyString());
         }
     }
 

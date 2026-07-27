@@ -2,7 +2,9 @@ package cmc.recap.user.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import cmc.recap.auth.repository.RefreshTokenRepository;
@@ -77,6 +79,22 @@ class UserServiceTest {
         assertThat(user.getOauthProvider()).isNull();
         assertThat(user.getOauthId()).isNull();
         assertThat(user.getFcmToken()).isNull();
+    }
+
+    @Test
+    @DisplayName("탈퇴 시 originalImageKey가 null인 카드는 S3 삭제 대상에서 제외하고 InfoCard는 정상 삭제한다")
+    void 탈퇴_시_originalImageKey가_null인_카드는_S3_삭제_대상에서_제외하고_InfoCard는_정상_삭제한다() {
+        User user = User.createByDevice("device-1", Platform.IOS);
+        InfoCard expiredCard = InfoCard.create(
+                user, CardType.JOB, "title", "summary", "body", "captures/1/a.jpg", "extracted", null);
+        expiredCard.expireOriginalImage();
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+        given(infoCardRepository.findByUser(user)).willReturn(List.of(expiredCard));
+
+        userService.withdraw(1L);
+
+        verify(s3Client, never()).deleteObjects(any(DeleteObjectsRequest.class));
+        verify(infoCardRepository).deleteAll(List.of(expiredCard));
     }
 
     @Test
