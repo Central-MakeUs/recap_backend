@@ -2,6 +2,7 @@ package cmc.recap.card.service;
 
 import cmc.recap.card.domain.CardType;
 import cmc.recap.card.domain.InfoCard;
+import cmc.recap.card.dto.response.CapturePageResponse;
 import cmc.recap.card.dto.response.CaptureSummaryResponse;
 import cmc.recap.card.dto.response.HomeSummaryResponse;
 import cmc.recap.card.dto.response.TopTypeResponse;
@@ -15,6 +16,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -40,6 +45,17 @@ public class HomeService {
         boolean hasAnyCapture = infoCardRepository.existsByUser(user);
 
         return HomeSummaryResponse.of(recentCaptures, favorites, topTypes, hasAnyCapture);
+    }
+
+    public CapturePageResponse getRecentCapturesPage(Long userId, int page, int size) {
+        User user = userRepository.getReferenceById(userId);
+        Instant since = Instant.now().minus(RECENT_DAYS, ChronoUnit.DAYS);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<InfoCard> result = infoCardRepository.findByUserAndCreatedAtAfter(user, since, pageable);
+        List<CaptureSummaryResponse> items = result.getContent().stream()
+                .map(this::toCaptureSummary)
+                .toList();
+        return CapturePageResponse.of(result.getTotalElements(), result.hasNext(), items);
     }
 
     private List<CaptureSummaryResponse> getRecentCaptures(User user) {
