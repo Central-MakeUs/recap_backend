@@ -24,3 +24,4 @@
 | [LLD-0011](LLD-0011-capture-body-edit.md) | 정보카드 본문(body) 수정 API | Accepted | 2026-07-28 |
 | [LLD-0012](LLD-0012-image-expiration-batch.md) | 원본 이미지 자동 만료 삭제 배치 | Accepted | 2026-07-28 |
 | [LLD-0013](LLD-0013-bulk-capture-delete.md) | 캡처 다중 삭제 API | Accepted | 2026-07-28 |
+| [LLD-0014](LLD-0014-recent-captures-list.md) | 최근 정리된 캡처 전체 목록 API | Accepted | 2026-07-28 |
