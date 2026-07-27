@@ -2,6 +2,7 @@ package cmc.recap.card.controller;
 
 import cmc.recap.card.dto.request.FavoriteRequest;
 import cmc.recap.card.dto.request.OrganizeRequest;
+import cmc.recap.card.dto.request.ReportRequest;
 import cmc.recap.card.dto.request.UploadUrlsRequest;
 import cmc.recap.card.dto.response.CaptureDetailResponse;
 import cmc.recap.card.dto.response.OrganizeResponse;
@@ -102,6 +103,15 @@ public class CaptureController implements CaptureApiDocs {
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal Long userId, @PathVariable Long captureId) {
         captureService.delete(userId, captureId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{captureId}/report")
+    @Override
+    public ResponseEntity<Void> report(
+            @AuthenticationPrincipal Long userId, @PathVariable Long captureId,
+            @Valid @RequestBody ReportRequest request) {
+        captureService.report(userId, captureId, request.reason());
         return ResponseEntity.noContent().build();
     }
 }
