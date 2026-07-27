@@ -4,9 +4,17 @@
 
 | 항목 | 값 |
 | --- | --- |
-| 상태 | Accepted |
-| 날짜 | 2026-07-28 |
+| 상태 | Accepted (개정) |
+| 날짜 | 2026-07-28, 1차 개정 2026-07-28 |
 | 관련 | [ADR-0015](../adr/ADR-0015-user-withdrawal-hybrid-deletion.md), [LLD-0009](LLD-0009-user-withdrawal.md), [LLD-0012](LLD-0012-image-expiration-batch.md), [LLD-0013](LLD-0013-bulk-capture-delete.md) |
+
+## 개정 이력
+
+- 2026-07-28: `AccountInfoResponse.from()`이 `oauthProvider`를 enum으로
+  가정(`.name()` 호출)했던 게 오류로 확인됨 — 실제 `User.oauthProvider`는
+  `String` 컬럼. `.name()` 제거하고 바로 `.toLowerCase()` 적용하도록
+  수정. 탈퇴한 유저(Access Token 잔존 리스크 구간)가 이 API들을
+  호출하는 엣지 케이스에 대한 처리 방침 추가.
 
 ## 맥락 (Context)
 
@@ -80,7 +88,8 @@ private User getUser(Long userId) {
 public record AccountInfoResponse(String platform, Instant createdAt) {
     public static AccountInfoResponse from(User user) {
         return new AccountInfoResponse(
-                user.getOauthProvider().name().toLowerCase(), user.getCreatedAt());
+                user.getOauthProvider().toLowerCase(), user.getCreatedAt());
+        // 주의: oauthProvider는 String 컬럼(enum 아님). .name() 호출 금지.
     }
 }
 
@@ -92,7 +101,26 @@ public record DataSummaryResponse(long capturedCount) {
 ```
 
 `platform`은 소문자 `"apple"`/`"kakao"`로 응답한다(화면 표기 및
-이슈 원문 형식과 일치).
+이슈 원문 형식과 일치). 저장된 값의 원래 대소문자와 무관하게
+`.toLowerCase()`로 항상 정규화한다.
+
+### 탈퇴한 유저가 이 API를 호출하는 경우 (엣지 케이스, 별도 방어 없음)
+
+ADR-0015가 "탈퇴 후 Access Token이 최대 30분간 잔존 유효할 수 있음"을
+낮은 심각도로 감수하기로 했으므로, 그 구간에 이 3개 API가 호출될
+가능성이 이론상 있다. **별도 가드를 추가하지 않는다** — 세 엔드포인트
+모두 자연스럽게 무해한 결과로 수렴하기 때문이다.
+
+```
+GET /users/me            → platform: null, createdAt: 가입일 그대로
+                            (withdraw()가 oauthProvider를 null 처리하므로)
+GET /users/me/data-summary → count: 0 (탈퇴 시 이미 전부 삭제됐으므로 사실과 일치)
+DELETE /users/me/data     → deleteAllCaptures()가 빈 리스트 대상으로 no-op
+```
+
+새 `ALREADY_WITHDRAWN` 가드를 3곳에 추가하는 비용이, 이 좁은 시간
+구간의 무해한 엣지 케이스를 막는 실익보다 크다고 판단해 ADR-0015의
+기존 리스크 수용 범위에 포함시킨다.
 
 ### 신규 Repository 메서드
 
