@@ -336,6 +336,28 @@ class CaptureControllerTest {
     }
 
     @Test
+    @DisplayName("정보카드를 다중 삭제하면 204를 응답한다")
+    void 정보카드를_다중_삭제하면_204를_응답한다() throws Exception {
+        mockMvc.perform(post("/api/v1/captures/bulk-delete")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"captureIds\":[10,11]}"))
+                .andExpect(status().isNoContent());
+
+        verify(captureService).bulkDelete(1L, List.of(10L, 11L));
+    }
+
+    @Test
+    @DisplayName("인증 없이 다중 삭제를 요청하면 401을 응답한다")
+    void 인증_없이_다중_삭제를_요청하면_401을_응답한다() throws Exception {
+        mockMvc.perform(post("/api/v1/captures/bulk-delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"captureIds\":[10,11]}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error.code").value("OAUTH_VERIFICATION_FAILED"));
+    }
+
+    @Test
     @DisplayName("정보카드를 신고하면 204를 응답한다")
     void 정보카드를_신고하면_204를_응답한다() throws Exception {
         mockMvc.perform(post("/api/v1/captures/10/report")
