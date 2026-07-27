@@ -1,6 +1,7 @@
 package cmc.recap.card.controller;
 
 import cmc.recap.card.dto.request.BodyUpdateRequest;
+import cmc.recap.card.dto.request.BulkDeleteRequest;
 import cmc.recap.card.dto.request.FavoriteRequest;
 import cmc.recap.card.dto.request.OrganizeRequest;
 import cmc.recap.card.dto.request.ReportRequest;
@@ -113,6 +114,14 @@ public class CaptureController implements CaptureApiDocs {
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal Long userId, @PathVariable Long captureId) {
         captureService.delete(userId, captureId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/bulk-delete")
+    @Override
+    public ResponseEntity<Void> bulkDelete(
+            @AuthenticationPrincipal Long userId, @Valid @RequestBody BulkDeleteRequest request) {
+        captureService.bulkDelete(userId, request.captureIds());
         return ResponseEntity.noContent().build();
     }
 
