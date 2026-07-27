@@ -18,3 +18,4 @@
 | [LLD-0005](LLD-0005-capture-detail-favorite-delete.md) | 정보카드 상세조회 · 즐겨찾기 · 삭제 API | Accepted | 2026-07-17 |
 | [LLD-0006](LLD-0006-storage-api.md) | 보관함 API (즐겨찾기 · 기타 · 유형별 보기) | Accepted | 2026-07-17 |
 | [LLD-0007](LLD-0007-search-api.md) | 검색 API | Accepted | 2026-07-18 |
+| [LLD-0008](LLD-0008-body-type-templates.md) | body 유형별 구조화 템플릿 (프롬프트 개정) | Accepted | 2026-07-20 |
