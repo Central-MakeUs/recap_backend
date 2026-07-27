@@ -18,6 +18,9 @@ import cmc.recap.card.image.PresignedUploadInfo;
 import cmc.recap.card.repository.InfoCardRepository;
 import cmc.recap.global.exception.ErrorCode;
 import cmc.recap.global.exception.model.BusinessException;
+import cmc.recap.report.domain.Report;
+import cmc.recap.report.domain.ReportReason;
+import cmc.recap.report.repository.ReportRepository;
 import cmc.recap.user.domain.Platform;
 import cmc.recap.user.domain.User;
 import java.net.URI;
@@ -44,13 +47,16 @@ class CaptureServiceTest {
     @Mock
     private InfoCardRepository infoCardRepository;
     @Mock
+    private ReportRepository reportRepository;
+    @Mock
     private S3Client s3Client;
 
     private CaptureService captureService;
 
     @BeforeEach
     void setUp() {
-        captureService = new CaptureService(imagePresignedUrlProvider, infoCardRepository, s3Client, BUCKET_NAME);
+        captureService = new CaptureService(
+                imagePresignedUrlProvider, infoCardRepository, reportRepository, s3Client, BUCKET_NAME);
     }
 
     @Test
@@ -177,6 +183,56 @@ class CaptureServiceTest {
                 .isEqualTo(ErrorCode.NOT_FOUND);
         verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
         verify(infoCardRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("report는 신고 시점 title/summary/cardType 스냅샷으로 Report를 저장한다")
+    void report는_신고_시점_title_summary_cardType_스냅샷으로_Report를_저장한다() {
+        User owner = userWithId(1L);
+        InfoCard card = cardWithId(10L, owner);
+        given(infoCardRepository.findById(10L)).willReturn(Optional.of(card));
+        given(reportRepository.existsByUserAndCaptureId(owner, 10L)).willReturn(false);
+
+        captureService.report(1L, 10L, ReportReason.WRONG_TYPE);
+
+        ArgumentCaptor<Report> captor = ArgumentCaptor.forClass(Report.class);
+        verify(reportRepository).save(captor.capture());
+        Report saved = captor.getValue();
+        assertThat(saved.getUser()).isEqualTo(owner);
+        assertThat(saved.getCaptureId()).isEqualTo(10L);
+        assertThat(saved.getCardType()).isEqualTo(CardType.JOB);
+        assertThat(saved.getTitle()).isEqualTo("title");
+        assertThat(saved.getSummary()).isEqualTo("summary");
+        assertThat(saved.getReason()).isEqualTo(ReportReason.WRONG_TYPE);
+    }
+
+    @Test
+    @DisplayName("report는 이미 신고한 카드면 ALREADY_REPORTED를 던진다")
+    void report는_이미_신고한_카드면_ALREADY_REPORTED를_던진다() {
+        User owner = userWithId(1L);
+        InfoCard card = cardWithId(10L, owner);
+        given(infoCardRepository.findById(10L)).willReturn(Optional.of(card));
+        given(reportRepository.existsByUserAndCaptureId(owner, 10L)).willReturn(true);
+
+        assertThatThrownBy(() -> captureService.report(1L, 10L, ReportReason.WRONG_TYPE))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.ALREADY_REPORTED);
+        verify(reportRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("report는 다른 유저 소유면 NOT_FOUND를 던진다")
+    void report는_다른_유저_소유면_NOT_FOUND를_던진다() {
+        User owner = userWithId(1L);
+        InfoCard card = cardWithId(10L, owner);
+        given(infoCardRepository.findById(10L)).willReturn(Optional.of(card));
+
+        assertThatThrownBy(() -> captureService.report(2L, 10L, ReportReason.WRONG_TYPE))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.NOT_FOUND);
+        verify(reportRepository, never()).save(any());
     }
 
     private User userWithId(Long id) {
