@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import cmc.recap.card.domain.CardType;
@@ -205,6 +206,21 @@ class SearchServiceTest {
             SearchResponse response = searchService.search(1L, "카페", SearchScope.ALL, null, 0, 20);
 
             assertThat(response.items().get(0).ocrExcerptHighlighted()).contains("<mark>카페</mark>");
+        }
+
+        @Test
+        @DisplayName("originalImageKey가 null이면 presigned URL 발급 없이 thumbnailUrl을 null로 반환한다")
+        void originalImageKey가_null이면_presigned_URL_발급_없이_thumbnailUrl을_null로_반환한다() {
+            User user = userWithId(1L);
+            InfoCard expired = cardWithId(1L, user, "카페 추천", "요약", "본문", null);
+            expired.expireOriginalImage();
+            given(infoCardRepository.search(any(), eq("카페"), eq(false), isNull(), any()))
+                    .willReturn(new PageImpl<>(List.of(expired)));
+
+            SearchResponse response = searchService.search(1L, "카페", SearchScope.ALL, null, 0, 20);
+
+            assertThat(response.items().get(0).thumbnailUrl()).isNull();
+            verify(imagePresignedUrlProvider, never()).issueDownloadUrl(anyString());
         }
 
         @Test
