@@ -13,7 +13,6 @@ import cmc.recap.global.exception.model.BusinessException;
 import cmc.recap.report.domain.Report;
 import cmc.recap.report.domain.ReportReason;
 import cmc.recap.report.repository.ReportRepository;
-import java.net.URL;
 import java.util.List;
 import java.util.stream.IntStream;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,8 +53,7 @@ public class CaptureService {
 
     public CaptureDetailResponse getDetail(Long userId, Long captureId) {
         InfoCard card = getOwnedCard(userId, captureId);
-        URL originalImageUrl = imagePresignedUrlProvider.issueDownloadUrl(card.getOriginalImageKey());
-        return CaptureDetailResponse.from(card, originalImageUrl.toString());
+        return CaptureDetailResponse.from(card, resolveOriginalImageUrl(card));
     }
 
     @Transactional
@@ -67,13 +65,15 @@ public class CaptureService {
     @Transactional
     public void delete(Long userId, Long captureId) {
         InfoCard card = getOwnedCard(userId, captureId);
-        try {
-            s3Client.deleteObject(DeleteObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(card.getOriginalImageKey())
-                    .build());
-        } catch (SdkException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, e);
+        if (card.getOriginalImageKey() != null) {
+            try {
+                s3Client.deleteObject(DeleteObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(card.getOriginalImageKey())
+                        .build());
+            } catch (SdkException e) {
+                throw new BusinessException(ErrorCode.INTERNAL_ERROR, e);
+            }
         }
         infoCardRepository.delete(card);
     }
@@ -91,6 +91,13 @@ public class CaptureService {
             throw new BusinessException(ErrorCode.ALREADY_REPORTED);
         }
         reportRepository.save(Report.create(card.getUser(), card, reason));
+    }
+
+    private String resolveOriginalImageUrl(InfoCard card) {
+        if (card.getOriginalImageKey() == null) {
+            return null;
+        }
+        return imagePresignedUrlProvider.issueDownloadUrl(card.getOriginalImageKey()).toString();
     }
 
     private UploadItem issueUploadItem(Long userId) {

@@ -79,11 +79,15 @@ public class SearchService {
                 ? SearchHighlighter.excerptOcrMatch(card.getExtractedText(), q)
                 : null;
 
-        String thumbnailUrl = imagePresignedUrlProvider.issueDownloadUrl(card.getOriginalImageKey())
-                .toString();
+        return SearchResultResponse.of(card, issueThumbnailUrl(card.getOriginalImageKey()),
+                titleHighlighted, summaryHighlighted, ocrExcerptHighlighted);
+    }
 
-        return SearchResultResponse.of(card, thumbnailUrl, titleHighlighted, summaryHighlighted,
-                ocrExcerptHighlighted);
+    private String issueThumbnailUrl(String objectKey) {
+        if (objectKey == null) {
+            return null;
+        }
+        return imagePresignedUrlProvider.issueDownloadUrl(objectKey).toString();
     }
 
     private record ScopeParams(boolean favoriteOnly, CardType filterType) {

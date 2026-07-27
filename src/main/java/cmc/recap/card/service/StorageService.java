@@ -81,6 +81,9 @@ public class StorageService {
     }
 
     private String issueThumbnailUrl(String objectKey) {
+        if (objectKey == null) {
+            return null;
+        }
         return imagePresignedUrlProvider.issueDownloadUrl(objectKey).toString();
     }
 }
