@@ -46,6 +46,8 @@ public interface InfoCardRepository extends JpaRepository<InfoCard, Long> {
 
     List<InfoCard> findByCreatedAtBeforeAndOriginalImageKeyIsNotNull(Instant cutoff);
 
+    List<InfoCard> findByIdInAndUser(List<Long> ids, User user);
+
     @Query("""
         select c from InfoCard c
         where c.user = :user

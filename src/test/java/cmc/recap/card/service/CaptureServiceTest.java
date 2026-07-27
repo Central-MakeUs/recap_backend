@@ -23,9 +23,12 @@ import cmc.recap.report.domain.ReportReason;
 import cmc.recap.report.repository.ReportRepository;
 import cmc.recap.user.domain.Platform;
 import cmc.recap.user.domain.User;
+import cmc.recap.user.repository.UserRepository;
 import java.net.URI;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,6 +39,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 
 @ExtendWith(MockitoExtension.class)
 class CaptureServiceTest {
@@ -49,6 +54,8 @@ class CaptureServiceTest {
     @Mock
     private ReportRepository reportRepository;
     @Mock
+    private UserRepository userRepository;
+    @Mock
     private S3Client s3Client;
 
     private CaptureService captureService;
@@ -56,7 +63,8 @@ class CaptureServiceTest {
     @BeforeEach
     void setUp() {
         captureService = new CaptureService(
-                imagePresignedUrlProvider, infoCardRepository, reportRepository, s3Client, BUCKET_NAME);
+                imagePresignedUrlProvider, infoCardRepository, reportRepository, userRepository, s3Client,
+                BUCKET_NAME);
     }
 
     @Test
@@ -224,6 +232,100 @@ class CaptureServiceTest {
                 .isEqualTo(ErrorCode.NOT_FOUND);
         verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
         verify(infoCardRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("bulkDelete는 요청한 ID 전부 소유 시 S3 오브젝트와 InfoCard를 모두 삭제한다")
+    void bulkDelete는_요청한_ID_전부_소유_시_S3_오브젝트와_InfoCard를_모두_삭제한다() {
+        User owner = userWithId(1L);
+        InfoCard card1 = cardWithId(10L, owner);
+        InfoCard card2 = cardWithId(11L, owner);
+        given(userRepository.getReferenceById(1L)).willReturn(owner);
+        given(infoCardRepository.findByIdInAndUser(List.of(10L, 11L), owner))
+                .willReturn(List.of(card1, card2));
+
+        captureService.bulkDelete(1L, List.of(10L, 11L));
+
+        ArgumentCaptor<DeleteObjectsRequest> captor = ArgumentCaptor.forClass(DeleteObjectsRequest.class);
+        verify(s3Client).deleteObjects(captor.capture());
+        assertThat(captor.getValue().bucket()).isEqualTo(BUCKET_NAME);
+        assertThat(captor.getValue().delete().objects())
+                .extracting(ObjectIdentifier::key)
+                .containsExactly("captures/1/a.jpg", "captures/1/a.jpg");
+        verify(infoCardRepository).deleteAll(List.of(card1, card2));
+    }
+
+    @Test
+    @DisplayName("bulkDelete는 다른 유저 소유/존재하지 않는 ID가 섞여도 조회된 소유 카드만 삭제한다")
+    void bulkDelete는_다른_유저_소유_존재하지_않는_ID가_섞여도_조회된_소유_카드만_삭제한다() {
+        User owner = userWithId(1L);
+        InfoCard ownedCard = cardWithId(10L, owner);
+        given(userRepository.getReferenceById(1L)).willReturn(owner);
+        given(infoCardRepository.findByIdInAndUser(List.of(10L, 999L, 888L), owner))
+                .willReturn(List.of(ownedCard));
+
+        captureService.bulkDelete(1L, List.of(10L, 999L, 888L));
+
+        verify(infoCardRepository).deleteAll(List.of(ownedCard));
+        ArgumentCaptor<DeleteObjectsRequest> captor = ArgumentCaptor.forClass(DeleteObjectsRequest.class);
+        verify(s3Client).deleteObjects(captor.capture());
+        assertThat(captor.getValue().delete().objects())
+                .extracting(ObjectIdentifier::key)
+                .containsExactly("captures/1/a.jpg");
+    }
+
+    @Test
+    @DisplayName("bulkDelete는 originalImageKey가 null인 카드를 S3 삭제 대상에서 제외하지만 DB에서는 삭제한다")
+    void bulkDelete는_originalImageKey가_null인_카드를_S3_삭제_대상에서_제외하지만_DB에서는_삭제한다() {
+        User owner = userWithId(1L);
+        InfoCard expiredCard = cardWithId(10L, owner);
+        expiredCard.expireOriginalImage();
+        InfoCard normalCard = cardWithId(11L, owner);
+        given(userRepository.getReferenceById(1L)).willReturn(owner);
+        given(infoCardRepository.findByIdInAndUser(List.of(10L, 11L), owner))
+                .willReturn(List.of(expiredCard, normalCard));
+
+        captureService.bulkDelete(1L, List.of(10L, 11L));
+
+        ArgumentCaptor<DeleteObjectsRequest> captor = ArgumentCaptor.forClass(DeleteObjectsRequest.class);
+        verify(s3Client).deleteObjects(captor.capture());
+        assertThat(captor.getValue().delete().objects())
+                .extracting(ObjectIdentifier::key)
+                .containsExactly("captures/1/a.jpg");
+        verify(infoCardRepository).deleteAll(List.of(expiredCard, normalCard));
+    }
+
+    @Test
+    @DisplayName("bulkDelete는 captureIds가 비어있으면 INVALID_INPUT을 던지고 아무것도 조회/삭제하지 않는다")
+    void bulkDelete는_captureIds가_비어있으면_INVALID_INPUT을_던지고_아무것도_조회_삭제하지_않는다() {
+        assertThatThrownBy(() -> captureService.bulkDelete(1L, List.of()))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_INPUT);
+        verify(userRepository, never()).getReferenceById(any());
+        verify(infoCardRepository, never()).findByIdInAndUser(any(), any());
+        verify(s3Client, never()).deleteObjects(any(DeleteObjectsRequest.class));
+    }
+
+    @Test
+    @DisplayName("bulkDelete는 1000개를 초과하면 S3 삭제 요청을 여러 번 청크로 나눠 호출한다")
+    void bulkDelete는_1000개를_초과하면_S3_삭제_요청을_여러_번_청크로_나눠_호출한다() {
+        User owner = userWithId(1L);
+        List<Long> captureIds = IntStream.rangeClosed(1, 1500).mapToObj(Long::valueOf).toList();
+        List<InfoCard> cards = captureIds.stream()
+                .map(id -> cardWithId(id, owner))
+                .toList();
+        given(userRepository.getReferenceById(1L)).willReturn(owner);
+        given(infoCardRepository.findByIdInAndUser(captureIds, owner)).willReturn(cards);
+
+        captureService.bulkDelete(1L, captureIds);
+
+        ArgumentCaptor<DeleteObjectsRequest> captor = ArgumentCaptor.forClass(DeleteObjectsRequest.class);
+        verify(s3Client, times(2)).deleteObjects(captor.capture());
+        List<DeleteObjectsRequest> requests = captor.getAllValues();
+        assertThat(requests.get(0).delete().objects()).hasSize(1000);
+        assertThat(requests.get(1).delete().objects()).hasSize(500);
+        verify(infoCardRepository).deleteAll(cards);
     }
 
     @Test

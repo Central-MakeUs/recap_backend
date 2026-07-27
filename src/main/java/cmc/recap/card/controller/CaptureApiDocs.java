@@ -1,6 +1,7 @@
 package cmc.recap.card.controller;
 
 import cmc.recap.card.dto.request.BodyUpdateRequest;
+import cmc.recap.card.dto.request.BulkDeleteRequest;
 import cmc.recap.card.dto.request.FavoriteRequest;
 import cmc.recap.card.dto.request.OrganizeRequest;
 import cmc.recap.card.dto.request.ReportRequest;
@@ -101,6 +102,14 @@ public interface CaptureApiDocs {
             ErrorCode.NOT_FOUND
     })
     ResponseEntity<Void> delete(Long userId, Long captureId);
+
+    @Operation(summary = "정보카드 다중 삭제")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "삭제 성공"))
+    @ApiErrorCodes({
+            ErrorCode.INVALID_INPUT
+    })
+    ResponseEntity<Void> bulkDelete(Long userId, BulkDeleteRequest request);
 
     @Operation(summary = "정보카드 신고")
     @io.swagger.v3.oas.annotations.responses.ApiResponses(
