@@ -2,6 +2,10 @@
 
 > Architecture Decision Record. 하나의 중요한 의사결정과 그 이유를 기록한다.
 
+> **참고 (2026-07-20)**: CardSummary 재도입을 두 번째로 검토했으나
+> 기각([LLD-0008](../lld/LLD-0008-body-type-templates.md)). body 내부
+> 텍스트 구조화로 대체 확정. CardSummary 관련 코드는 이번에 삭제됨.
+
 | 항목 | 값 |
 | --- | --- |
 | 상태 | Accepted |
