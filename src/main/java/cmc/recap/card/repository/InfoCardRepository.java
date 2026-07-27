@@ -26,6 +26,8 @@ public interface InfoCardRepository extends JpaRepository<InfoCard, Long> {
 
     boolean existsByUser(User user);
 
+    long countByUser(User user);
+
     List<InfoCard> findByUserAndFavoriteTrueOrderByFavoritedAtDesc(User user);
 
     List<InfoCard> findByUserAndType(User user, CardType type, Sort sort);
