@@ -48,6 +48,8 @@ public interface InfoCardRepository extends JpaRepository<InfoCard, Long> {
 
     List<InfoCard> findByIdInAndUser(List<Long> ids, User user);
 
+    Page<InfoCard> findByUserAndCreatedAtAfter(User user, Instant since, Pageable pageable);
+
     @Query("""
         select c from InfoCard c
         where c.user = :user
