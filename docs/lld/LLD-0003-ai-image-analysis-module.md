@@ -25,7 +25,7 @@ ADR-0013에서 "1단계 통합형 + `ImageAnalysisProvider` 인터페이스" 구
 
 ```
 벤더: Google Gemini
-모델: gemini-2.5-flash (환경변수 GEMINI_MODEL_NAME, 기본값으로 지정)
+모델: gemini-3.1-flash-lite (환경변수 GEMINI_MODEL_NAME, 기본값으로 지정)
 ```
 
 무료/저가 티어에서 시작하되, 이미지+한글 OCR+9종 분류+요약이라는 복합
