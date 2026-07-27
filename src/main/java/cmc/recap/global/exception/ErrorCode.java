@@ -38,7 +38,10 @@ public enum ErrorCode {
     IMAGE_UPLOAD_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "업로드된 이미지를 찾을 수 없습니다"),
 
     // 정리 (409)
-    ORGANIZE_IN_PROGRESS(HttpStatus.CONFLICT, "이미 진행 중인 정리 작업이 있습니다")
+    ORGANIZE_IN_PROGRESS(HttpStatus.CONFLICT, "이미 진행 중인 정리 작업이 있습니다"),
+
+    // 회원탈퇴 (409)
+    ALREADY_WITHDRAWN(HttpStatus.CONFLICT, "이미 탈퇴한 회원입니다")
     ;
 
     private final HttpStatus httpStatus;

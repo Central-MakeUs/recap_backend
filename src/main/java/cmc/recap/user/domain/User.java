@@ -11,6 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,6 +42,9 @@ public class User extends BaseTimeEntity {
     @Column(name = "oauth_id")
     private String oauthId;
 
+    @Column(name = "withdrawn", nullable = false)
+    private boolean withdrawn;
+
     private User(String deviceId, Platform platform) {
         this.deviceId = deviceId;
         this.platform = platform;
@@ -61,6 +65,17 @@ public class User extends BaseTimeEntity {
 
     public void updateFcmToken(String fcmToken) {
         this.fcmToken = fcmToken;
+    }
+
+    public void withdraw() {
+        if (this.withdrawn) {
+            throw new BusinessException(ErrorCode.ALREADY_WITHDRAWN);
+        }
+        this.deviceId = "WITHDRAWN-" + UUID.randomUUID();
+        this.oauthProvider = null;
+        this.oauthId = null;
+        this.fcmToken = null;
+        this.withdrawn = true;
     }
 
     private static void validateDeviceId(String deviceId) {
