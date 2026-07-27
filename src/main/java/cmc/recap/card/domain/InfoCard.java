@@ -56,8 +56,8 @@ public class InfoCard extends BaseTimeEntity {
     @Column(name = "body", columnDefinition = "TEXT")
     private String body;
 
-    @Column(name = "original_image_key", nullable = false, length = 255)
-    private String originalImageKey;
+    @Column(name = "original_image_key", length = 255)
+    private String originalImageKey; // 1개월 후 만료 삭제되면 null(정보카드 자체는 영구 보존)
 
     @Column(name = "extracted_text", columnDefinition = "TEXT")
     private String extractedText; // OCR 원문, 검색 전용, 응답 미노출
@@ -109,6 +109,10 @@ public class InfoCard extends BaseTimeEntity {
 
     public List<String> getKeywords() {
         return Collections.unmodifiableList(keywords);
+    }
+
+    public void expireOriginalImage() {
+        this.originalImageKey = null;
     }
 
     public void updateBody(String newBody) {
