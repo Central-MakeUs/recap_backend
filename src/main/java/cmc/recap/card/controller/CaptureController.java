@@ -1,7 +1,7 @@
 package cmc.recap.card.controller;
 
-import cmc.recap.card.dto.request.BodyUpdateRequest;
 import cmc.recap.card.dto.request.BulkDeleteRequest;
+import cmc.recap.card.dto.request.CaptureUpdateRequest;
 import cmc.recap.card.dto.request.FavoriteRequest;
 import cmc.recap.card.dto.request.OrganizeRequest;
 import cmc.recap.card.dto.request.ReportRequest;
@@ -100,12 +100,12 @@ public class CaptureController implements CaptureApiDocs {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{captureId}/body")
+    @PatchMapping("/{captureId}")
     @Override
-    public ResponseEntity<Void> updateBody(
+    public ResponseEntity<Void> update(
             @AuthenticationPrincipal Long userId, @PathVariable Long captureId,
-            @Valid @RequestBody BodyUpdateRequest request) {
-        captureService.updateBody(userId, captureId, request.body());
+            @Valid @RequestBody CaptureUpdateRequest request) {
+        captureService.update(userId, captureId, request);
         return ResponseEntity.noContent().build();
     }
 
