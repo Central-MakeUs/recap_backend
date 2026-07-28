@@ -4,12 +4,15 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import cmc.recap.global.jwt.JwtProvider;
 import cmc.recap.user.dto.response.AccountInfoResponse;
+import cmc.recap.user.dto.response.ConsentStatusResponse;
 import cmc.recap.user.dto.response.DataSummaryResponse;
+import cmc.recap.user.service.ConsentService;
 import cmc.recap.user.service.UserService;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +37,9 @@ class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private ConsentService consentService;
 
     private String accessToken;
 
@@ -113,6 +119,62 @@ class UserControllerTest {
     @DisplayName("인증 없이 계정 데이터 삭제를 요청하면 401을 응답한다")
     void 인증_없이_계정_데이터_삭제를_요청하면_401을_응답한다() throws Exception {
         mockMvc.perform(delete("/api/v1/users/me/data"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error.code").value("OAUTH_VERIFICATION_FAILED"));
+    }
+
+    @Test
+    @DisplayName("동의 상태를 조회하면 동의 여부와 동의 시각을 응답한다")
+    void 동의_상태를_조회하면_동의_여부와_동의_시각을_응답한다() throws Exception {
+        Instant consentedAt = Instant.parse("2026-07-29T00:00:00Z");
+        given(consentService.getStatus(1L)).willReturn(new ConsentStatusResponse(true, consentedAt));
+
+        mockMvc.perform(get("/api/v1/users/me/consent")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.consented").value(true));
+    }
+
+    @Test
+    @DisplayName("인증 없이 동의 상태를 조회하면 401을 응답한다")
+    void 인증_없이_동의_상태를_조회하면_401을_응답한다() throws Exception {
+        mockMvc.perform(get("/api/v1/users/me/consent"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error.code").value("OAUTH_VERIFICATION_FAILED"));
+    }
+
+    @Test
+    @DisplayName("동의를 요청하면 204를 응답한다")
+    void 동의를_요청하면_204를_응답한다() throws Exception {
+        mockMvc.perform(post("/api/v1/users/me/consent")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isNoContent());
+
+        verify(consentService).give(1L);
+    }
+
+    @Test
+    @DisplayName("인증 없이 동의를 요청하면 401을 응답한다")
+    void 인증_없이_동의를_요청하면_401을_응답한다() throws Exception {
+        mockMvc.perform(post("/api/v1/users/me/consent"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error.code").value("OAUTH_VERIFICATION_FAILED"));
+    }
+
+    @Test
+    @DisplayName("동의 철회를 요청하면 204를 응답한다")
+    void 동의_철회를_요청하면_204를_응답한다() throws Exception {
+        mockMvc.perform(delete("/api/v1/users/me/consent")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isNoContent());
+
+        verify(consentService).withdraw(1L);
+    }
+
+    @Test
+    @DisplayName("인증 없이 동의 철회를 요청하면 401을 응답한다")
+    void 인증_없이_동의_철회를_요청하면_401을_응답한다() throws Exception {
+        mockMvc.perform(delete("/api/v1/users/me/consent"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error.code").value("OAUTH_VERIFICATION_FAILED"));
     }

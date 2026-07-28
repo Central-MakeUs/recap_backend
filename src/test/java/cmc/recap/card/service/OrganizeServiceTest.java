@@ -21,6 +21,7 @@ import cmc.recap.global.exception.model.BusinessException;
 import cmc.recap.user.domain.Platform;
 import cmc.recap.user.domain.User;
 import cmc.recap.user.repository.UserRepository;
+import cmc.recap.user.service.ConsentService;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -50,6 +51,8 @@ class OrganizeServiceTest {
     @Mock
     private ImageAnalysisTaskRunner imageAnalysisTaskRunner;
     @Mock
+    private ConsentService consentService;
+    @Mock
     private S3Client s3Client;
 
     private OrganizeService organizeService;
@@ -58,7 +61,7 @@ class OrganizeServiceTest {
     void setUp() {
         organizeService = new OrganizeService(
                 userRepository, organizeBatchRepository, infoCardRepository, imageAnalysisTaskRunner,
-                s3Client, BUCKET_NAME);
+                consentService, s3Client, BUCKET_NAME);
     }
 
     @Test
@@ -117,6 +120,7 @@ class OrganizeServiceTest {
     @Test
     @DisplayName("imageKeys가 20장을 초과하면 INVALID_INPUT을 던진다")
     void imageKeys가_20장을_초과하면_INVALID_INPUT을_던진다() {
+        given(consentService.hasActiveConsent(1L)).willReturn(true);
         List<String> imageKeys = IntStream.range(0, 21).mapToObj(i -> "key-" + i).toList();
 
         assertThatThrownBy(() -> organizeService.organize(1L, imageKeys))
@@ -128,6 +132,7 @@ class OrganizeServiceTest {
     @Test
     @DisplayName("imageKeys에 다른 유저의 objectKey가 섞여 있으면 INVALID_INPUT을 던지고 배치를 만들지 않는다")
     void imageKeys에_다른_유저의_objectKey가_섞여_있으면_INVALID_INPUT을_던지고_배치를_만들지_않는다() {
+        given(consentService.hasActiveConsent(1L)).willReturn(true);
         List<String> imageKeys = List.of("captures/1/a.jpg", "captures/2/b.jpg");
 
         assertThatThrownBy(() -> organizeService.organize(1L, imageKeys))
@@ -141,6 +146,7 @@ class OrganizeServiceTest {
     @Test
     @DisplayName("이미 PROCESSING 배치가 있으면 ORGANIZE_IN_PROGRESS를 던진다")
     void 이미_PROCESSING_배치가_있으면_ORGANIZE_IN_PROGRESS를_던진다() {
+        given(consentService.hasActiveConsent(1L)).willReturn(true);
         User user = User.createByDevice("device-1", Platform.IOS);
         given(userRepository.getReferenceById(1L)).willReturn(user);
         given(organizeBatchRepository.existsByUserAndStatus(user, BatchStatus.PROCESSING)).willReturn(true);
@@ -156,6 +162,7 @@ class OrganizeServiceTest {
     @Test
     @DisplayName("정상 요청이면 배치를 생성하고 이미지별로 비동기 분석을 디스패치한다")
     void 정상_요청이면_배치를_생성하고_이미지별로_비동기_분석을_디스패치한다() {
+        given(consentService.hasActiveConsent(1L)).willReturn(true);
         User user = User.createByDevice("device-1", Platform.IOS);
         given(userRepository.getReferenceById(1L)).willReturn(user);
         given(organizeBatchRepository.existsByUserAndStatus(user, BatchStatus.PROCESSING)).willReturn(false);
@@ -168,6 +175,21 @@ class OrganizeServiceTest {
         assertThat(response.status()).isEqualTo(BatchStatus.PROCESSING);
         verify(imageAnalysisTaskRunner).analyzeAndSave(response.batchId(), "captures/1/a.jpg");
         verify(imageAnalysisTaskRunner).analyzeAndSave(response.batchId(), "captures/1/b.jpg");
+    }
+
+    @Test
+    @DisplayName("동의하지 않은 유저가 organize를 요청하면 AI_CONSENT_REQUIRED를 던지고 다른 검증은 수행하지 않는다")
+    void 동의하지_않은_유저가_organize를_요청하면_AI_CONSENT_REQUIRED를_던지고_다른_검증은_수행하지_않는다() {
+        given(consentService.hasActiveConsent(1L)).willReturn(false);
+        List<String> imageKeys = IntStream.range(0, 21).mapToObj(i -> "key-" + i).toList();
+
+        assertThatThrownBy(() -> organizeService.organize(1L, imageKeys))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.AI_CONSENT_REQUIRED);
+
+        verify(organizeBatchRepository, never()).existsByUserAndStatus(any(), any());
+        verify(organizeBatchRepository, never()).save(any());
     }
 
     @Test
