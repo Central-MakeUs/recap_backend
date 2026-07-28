@@ -49,3 +49,11 @@ aws:
 gemini:
   api-key: ${GEMINI_API_KEY:local-dev-placeholder-not-a-real-key}
   model-name: ${GEMINI_MODEL_NAME:gemini-3.5-flash}
+
+app:
+  ios:
+    minimum-version: ${IOS_MINIMUM_VERSION:1.0.0}
+    update-url: ${IOS_UPDATE_URL:}
+  android:
+    minimum-version: ${ANDROID_MINIMUM_VERSION:1.0.0}
+    update-url: ${ANDROID_UPDATE_URL:}
