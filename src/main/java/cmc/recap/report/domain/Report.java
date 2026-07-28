@@ -3,6 +3,8 @@ package cmc.recap.report.domain;
 import cmc.recap.card.domain.CardType;
 import cmc.recap.card.domain.InfoCard;
 import cmc.recap.global.entity.BaseTimeEntity;
+import cmc.recap.global.exception.ErrorCode;
+import cmc.recap.global.exception.model.BusinessException;
 import cmc.recap.user.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -55,7 +57,11 @@ public class Report extends BaseTimeEntity {
     @Column(name = "reason", nullable = false)
     private ReportReason reason;
 
-    public static Report create(User user, InfoCard card, ReportReason reason) {
+    @Column(name = "detail", length = 200)
+    private String detail;
+
+    public static Report create(User user, InfoCard card, ReportReason reason, String detail) {
+        validateDetail(detail);
         Report report = new Report();
         report.user = user;
         report.captureId = card.getId();
@@ -63,6 +69,13 @@ public class Report extends BaseTimeEntity {
         report.title = card.getTitle();
         report.summary = card.getSummary();
         report.reason = reason;
+        report.detail = detail;
         return report;
+    }
+
+    private static void validateDetail(String detail) {
+        if (detail != null && detail.length() > 200) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
     }
 }

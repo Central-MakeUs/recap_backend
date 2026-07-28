@@ -2,8 +2,8 @@ package cmc.recap.report.domain;
 
 public enum ReportReason {
 
-    WRONG_TYPE,
-    INCORRECT_INFO,
-    OFFENSIVE,
+    INACCURATE_CONTENT,
+    INAPPROPRIATE_CONTENT,
+    SENSITIVE_INFO,
     OTHER
 }
