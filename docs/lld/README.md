@@ -21,9 +21,10 @@
 | [LLD-0008](LLD-0008-body-type-templates.md) | body 유형별 구조화 템플릿 (프롬프트 개정)   | Accepted | 2026-07-20                 |
 | [LLD-0009](LLD-0009-user-withdrawal.md) | 회원탈퇴 API                     | Accepted | 2026-07-28                 |
 | [LLD-0010](LLD-0010-inappropriate-content-report.md) | 부적절한 AI 결과 신고 기능 (개정)        | Accepted | 2026-07-29                 |
-| [LLD-0011](LLD-0011-capture-body-edit.md) | 정보카드 본문(body) 수정 API         | Accepted | 2026-07-28                 |
+| [LLD-0011](LLD-0011-capture-body-edit.md) | 정보카드 본문(body) 수정 API         | Superseded by LLD-0017 | 2026-07-28                 |
 | [LLD-0012](LLD-0012-image-expiration-batch.md) | 원본 이미지 자동 만료 삭제 배치           | Accepted | 2026-07-28                 |
 | [LLD-0013](LLD-0013-bulk-capture-delete.md) | 캡처 다중 삭제 API                 | Accepted | 2026-07-28                 |
 | [LLD-0014](LLD-0014-recent-captures-list.md) | 최근 정리된 캡처 전체 목록 API          | Accepted | 2026-07-28                 |
 | [LLD-0015](LLD-0015-account-data-management.md) | 계정 정보 · 데이터 관리 API           | Accepted | 2026-07-28                 |
 | [LLD-0016](LLD-0016-ai-consent-management.md) | AI 분석 전송 동의 관리              | Accepted | 2026-07-29                 |
+| [LLD-0017](LLD-0017-capture-full-update.md) | 정보카드 전체 필드 수정 API          | Accepted | 2026-07-29                 |

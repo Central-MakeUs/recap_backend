@@ -4,9 +4,15 @@
 
 | 항목 | 값 |
 | --- | --- |
-| 상태 | Accepted |
+| 상태 | Superseded by [LLD-0017](LLD-0017-capture-full-update.md) |
 | 날짜 | 2026-07-28 |
 | 관련 | [LLD-0005](LLD-0005-capture-detail-favorite-delete.md), [LLD-0008](LLD-0008-body-type-templates.md) |
+
+> **대체됨**: 범위가 본문(body)만에서 제목/요약/본문/유형 4개
+> 필드로 확장되면서(fix#48), 이 문서의 전제(본문만 수정) 자체가
+> 뒤집혔다. 부분 개정이 아니라 [LLD-0017](LLD-0017-capture-full-update.md)로
+> 새로 작성. `PATCH /captures/{captureId}/body`는 제거되고
+> `PATCH /captures/{captureId}`로 대체됨.
 
 ## 맥락 (Context)
 
