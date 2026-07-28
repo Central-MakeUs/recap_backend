@@ -336,7 +336,7 @@ class CaptureServiceTest {
         given(infoCardRepository.findById(10L)).willReturn(Optional.of(card));
         given(reportRepository.existsByUserAndCaptureId(owner, 10L)).willReturn(false);
 
-        captureService.report(1L, 10L, ReportReason.WRONG_TYPE);
+        captureService.report(1L, 10L, ReportReason.INACCURATE_CONTENT, "가격 정보가 실제와 달라요");
 
         ArgumentCaptor<Report> captor = ArgumentCaptor.forClass(Report.class);
         verify(reportRepository).save(captor.capture());
@@ -346,7 +346,39 @@ class CaptureServiceTest {
         assertThat(saved.getCardType()).isEqualTo(CardType.JOB);
         assertThat(saved.getTitle()).isEqualTo("title");
         assertThat(saved.getSummary()).isEqualTo("summary");
-        assertThat(saved.getReason()).isEqualTo(ReportReason.WRONG_TYPE);
+        assertThat(saved.getReason()).isEqualTo(ReportReason.INACCURATE_CONTENT);
+        assertThat(saved.getDetail()).isEqualTo("가격 정보가 실제와 달라요");
+    }
+
+    @Test
+    @DisplayName("report는 detail 없이 호출해도 정상 저장한다")
+    void report는_detail_없이_호출해도_정상_저장한다() {
+        User owner = userWithId(1L);
+        InfoCard card = cardWithId(10L, owner);
+        given(infoCardRepository.findById(10L)).willReturn(Optional.of(card));
+        given(reportRepository.existsByUserAndCaptureId(owner, 10L)).willReturn(false);
+
+        captureService.report(1L, 10L, ReportReason.INACCURATE_CONTENT, null);
+
+        ArgumentCaptor<Report> captor = ArgumentCaptor.forClass(Report.class);
+        verify(reportRepository).save(captor.capture());
+        assertThat(captor.getValue().getDetail()).isNull();
+    }
+
+    @Test
+    @DisplayName("report는 detail이 200자를 초과하면 INVALID_INPUT을 던진다")
+    void report는_detail이_200자를_초과하면_INVALID_INPUT을_던진다() {
+        User owner = userWithId(1L);
+        InfoCard card = cardWithId(10L, owner);
+        given(infoCardRepository.findById(10L)).willReturn(Optional.of(card));
+        given(reportRepository.existsByUserAndCaptureId(owner, 10L)).willReturn(false);
+        String tooLong = "a".repeat(201);
+
+        assertThatThrownBy(() -> captureService.report(1L, 10L, ReportReason.INACCURATE_CONTENT, tooLong))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_INPUT);
+        verify(reportRepository, never()).save(any());
     }
 
     @Test
@@ -357,7 +389,7 @@ class CaptureServiceTest {
         given(infoCardRepository.findById(10L)).willReturn(Optional.of(card));
         given(reportRepository.existsByUserAndCaptureId(owner, 10L)).willReturn(true);
 
-        assertThatThrownBy(() -> captureService.report(1L, 10L, ReportReason.WRONG_TYPE))
+        assertThatThrownBy(() -> captureService.report(1L, 10L, ReportReason.INACCURATE_CONTENT, null))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.ALREADY_REPORTED);
@@ -371,7 +403,7 @@ class CaptureServiceTest {
         InfoCard card = cardWithId(10L, owner);
         given(infoCardRepository.findById(10L)).willReturn(Optional.of(card));
 
-        assertThatThrownBy(() -> captureService.report(2L, 10L, ReportReason.WRONG_TYPE))
+        assertThatThrownBy(() -> captureService.report(2L, 10L, ReportReason.INACCURATE_CONTENT, null))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.NOT_FOUND);
