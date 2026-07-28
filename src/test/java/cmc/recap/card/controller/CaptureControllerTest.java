@@ -358,15 +358,27 @@ class CaptureControllerTest {
     }
 
     @Test
-    @DisplayName("정보카드를 신고하면 204를 응답한다")
-    void 정보카드를_신고하면_204를_응답한다() throws Exception {
+    @DisplayName("detail을 포함해 신고하면 204를 응답한다")
+    void detail을_포함해_신고하면_204를_응답한다() throws Exception {
         mockMvc.perform(post("/api/v1/captures/10/report")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"reason\":\"WRONG_TYPE\"}"))
+                        .content("{\"reason\":\"INACCURATE_CONTENT\",\"detail\":\"가격 정보가 실제와 달라요\"}"))
                 .andExpect(status().isNoContent());
 
-        verify(captureService).report(1L, 10L, ReportReason.WRONG_TYPE);
+        verify(captureService).report(1L, 10L, ReportReason.INACCURATE_CONTENT, "가격 정보가 실제와 달라요");
+    }
+
+    @Test
+    @DisplayName("detail 없이 신고하면 204를 응답한다")
+    void detail_없이_신고하면_204를_응답한다() throws Exception {
+        mockMvc.perform(post("/api/v1/captures/10/report")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"INACCURATE_CONTENT\"}"))
+                .andExpect(status().isNoContent());
+
+        verify(captureService).report(1L, 10L, ReportReason.INACCURATE_CONTENT, null);
     }
 
     @Test
@@ -374,7 +386,7 @@ class CaptureControllerTest {
     void 인증_없이_신고하면_401을_응답한다() throws Exception {
         mockMvc.perform(post("/api/v1/captures/10/report")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"reason\":\"WRONG_TYPE\"}"))
+                        .content("{\"reason\":\"INACCURATE_CONTENT\"}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error.code").value("OAUTH_VERIFICATION_FAILED"));
     }

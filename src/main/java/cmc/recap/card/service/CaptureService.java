@@ -113,12 +113,12 @@ public class CaptureService {
     }
 
     @Transactional
-    public void report(Long userId, Long captureId, ReportReason reason) {
+    public void report(Long userId, Long captureId, ReportReason reason, String detail) {
         InfoCard card = getOwnedCard(userId, captureId);
         if (reportRepository.existsByUserAndCaptureId(card.getUser(), captureId)) {
             throw new BusinessException(ErrorCode.ALREADY_REPORTED);
         }
-        reportRepository.save(Report.create(card.getUser(), card, reason));
+        reportRepository.save(Report.create(card.getUser(), card, reason, detail));
     }
 
     private void deleteS3ObjectsInChunks(List<String> imageKeys) {
