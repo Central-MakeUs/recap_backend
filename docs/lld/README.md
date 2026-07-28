@@ -26,3 +26,4 @@
 | [LLD-0013](LLD-0013-bulk-capture-delete.md) | 캡처 다중 삭제 API                 | Accepted | 2026-07-28                 |
 | [LLD-0014](LLD-0014-recent-captures-list.md) | 최근 정리된 캡처 전체 목록 API          | Accepted | 2026-07-28                 |
 | [LLD-0015](LLD-0015-account-data-management.md) | 계정 정보 · 데이터 관리 API           | Accepted | 2026-07-28                 |
+| [LLD-0016](LLD-0016-ai-consent-management.md) | AI 분석 전송 동의 관리              | Accepted | 2026-07-29                 |
