@@ -130,7 +130,7 @@ public class CaptureController implements CaptureApiDocs {
     public ResponseEntity<Void> report(
             @AuthenticationPrincipal Long userId, @PathVariable Long captureId,
             @Valid @RequestBody ReportRequest request) {
-        captureService.report(userId, captureId, request.reason());
+        captureService.report(userId, captureId, request.reason(), request.detail());
         return ResponseEntity.noContent().build();
     }
 }

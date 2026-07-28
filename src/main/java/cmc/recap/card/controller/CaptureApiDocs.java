@@ -116,7 +116,8 @@ public interface CaptureApiDocs {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "신고 성공"))
     @ApiErrorCodes({
             ErrorCode.NOT_FOUND,
-            ErrorCode.ALREADY_REPORTED
+            ErrorCode.ALREADY_REPORTED,
+            ErrorCode.INVALID_INPUT
     })
     ResponseEntity<Void> report(Long userId, Long captureId, ReportRequest request);
 }
