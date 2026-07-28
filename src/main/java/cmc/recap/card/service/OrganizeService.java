@@ -14,6 +14,7 @@ import cmc.recap.global.exception.ErrorCode;
 import cmc.recap.global.exception.model.BusinessException;
 import cmc.recap.user.domain.User;
 import cmc.recap.user.repository.UserRepository;
+import cmc.recap.user.service.ConsentService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,7 @@ public class OrganizeService {
     private final OrganizeBatchRepository organizeBatchRepository;
     private final InfoCardRepository infoCardRepository;
     private final ImageAnalysisTaskRunner imageAnalysisTaskRunner;
+    private final ConsentService consentService;
     private final S3Client s3Client;
     private final String bucketName;
 
@@ -49,17 +51,22 @@ public class OrganizeService {
             OrganizeBatchRepository organizeBatchRepository,
             InfoCardRepository infoCardRepository,
             ImageAnalysisTaskRunner imageAnalysisTaskRunner,
+            ConsentService consentService,
             S3Client s3Client,
             @Value("${aws.s3.bucket-name}") String bucketName) {
         this.userRepository = userRepository;
         this.organizeBatchRepository = organizeBatchRepository;
         this.infoCardRepository = infoCardRepository;
         this.imageAnalysisTaskRunner = imageAnalysisTaskRunner;
+        this.consentService = consentService;
         this.s3Client = s3Client;
         this.bucketName = bucketName;
     }
 
     public OrganizeResponse organize(Long userId, List<String> imageKeys) {
+        if (!consentService.hasActiveConsent(userId)) {
+            throw new BusinessException(ErrorCode.AI_CONSENT_REQUIRED);
+        }
         validateImageKeys(userId, imageKeys);
         User user = userRepository.getReferenceById(userId);
         if (organizeBatchRepository.existsByUserAndStatus(user, BatchStatus.PROCESSING)) {

@@ -44,7 +44,10 @@ public enum ErrorCode {
     ALREADY_WITHDRAWN(HttpStatus.CONFLICT, "이미 탈퇴한 회원입니다"),
 
     // 신고 (409)
-    ALREADY_REPORTED(HttpStatus.CONFLICT, "이미 신고한 카드입니다")
+    ALREADY_REPORTED(HttpStatus.CONFLICT, "이미 신고한 카드입니다"),
+
+    // 동의 (403)
+    AI_CONSENT_REQUIRED(HttpStatus.FORBIDDEN, "AI 분석 전송에 동의하지 않았습니다")
     ;
 
     private final HttpStatus httpStatus;
