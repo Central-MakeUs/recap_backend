@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 
 import cmc.recap.card.domain.CardType;
 import cmc.recap.card.domain.InfoCard;
+import cmc.recap.card.dto.request.CaptureUpdateRequest;
 import cmc.recap.card.dto.response.CaptureDetailResponse;
 import cmc.recap.card.dto.response.UploadUrlsResponse;
 import cmc.recap.card.image.ImagePresignedUrlProvider;
@@ -177,13 +178,14 @@ class CaptureServiceTest {
     }
 
     @Test
-    @DisplayName("updateBody는 다른 유저 소유면 NOT_FOUND를 던진다")
-    void updateBody는_다른_유저_소유면_NOT_FOUND를_던진다() {
+    @DisplayName("update는 다른 유저 소유면 NOT_FOUND를 던진다")
+    void update는_다른_유저_소유면_NOT_FOUND를_던진다() {
         User owner = userWithId(1L);
         InfoCard card = cardWithId(10L, owner);
         given(infoCardRepository.findById(10L)).willReturn(Optional.of(card));
+        CaptureUpdateRequest request = new CaptureUpdateRequest("제목", "요약", "수정된 본문", CardType.KNOWLEDGE);
 
-        assertThatThrownBy(() -> captureService.updateBody(2L, 10L, "수정된 본문"))
+        assertThatThrownBy(() -> captureService.update(2L, 10L, request))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.NOT_FOUND);

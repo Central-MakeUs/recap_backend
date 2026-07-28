@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import cmc.recap.card.domain.BatchStatus;
 import cmc.recap.card.domain.CardType;
+import cmc.recap.card.dto.request.CaptureUpdateRequest;
 import cmc.recap.card.dto.response.CaptureDetailResponse;
 import cmc.recap.card.dto.response.OrganizeResponse;
 import cmc.recap.card.dto.response.OrganizeStatusResponse;
@@ -292,23 +293,26 @@ class CaptureControllerTest {
     }
 
     @Test
-    @DisplayName("본문을 수정하면 204를 응답한다")
-    void 본문을_수정하면_204를_응답한다() throws Exception {
-        mockMvc.perform(patch("/api/v1/captures/10/body")
+    @DisplayName("정보카드를 수정하면 204를 응답한다")
+    void 정보카드를_수정하면_204를_응답한다() throws Exception {
+        mockMvc.perform(patch("/api/v1/captures/10")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"body\":\"수정된 본문\"}"))
+                        .content("{\"title\":\"수정된 제목\",\"summary\":\"수정된 요약\","
+                                + "\"body\":\"수정된 본문\",\"cardType\":\"KNOWLEDGE\"}"))
                 .andExpect(status().isNoContent());
 
-        verify(captureService).updateBody(1L, 10L, "수정된 본문");
+        verify(captureService).update(1L, 10L,
+                new CaptureUpdateRequest("수정된 제목", "수정된 요약", "수정된 본문", CardType.KNOWLEDGE));
     }
 
     @Test
-    @DisplayName("인증 없이 본문을 수정하면 401을 응답한다")
-    void 인증_없이_본문을_수정하면_401을_응답한다() throws Exception {
-        mockMvc.perform(patch("/api/v1/captures/10/body")
+    @DisplayName("인증 없이 정보카드를 수정하면 401을 응답한다")
+    void 인증_없이_정보카드를_수정하면_401을_응답한다() throws Exception {
+        mockMvc.perform(patch("/api/v1/captures/10")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"body\":\"수정된 본문\"}"))
+                        .content("{\"title\":\"수정된 제목\",\"summary\":\"수정된 요약\","
+                                + "\"body\":\"수정된 본문\",\"cardType\":\"KNOWLEDGE\"}"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error.code").value("OAUTH_VERIFICATION_FAILED"));
     }

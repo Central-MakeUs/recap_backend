@@ -78,56 +78,109 @@ class InfoCardTest {
     }
 
     @Test
-    @DisplayName("updateBody는 정상 수정 시 bodyEdited를 true로, bodyEditedAt을 갱신한다")
-    void updateBody는_정상_수정_시_bodyEdited를_true로_bodyEditedAt을_갱신한다() {
+    @DisplayName("update는 정상 수정 시 edited를 true로, editedAt을 갱신한다")
+    void update는_정상_수정_시_edited를_true로_editedAt을_갱신한다() {
         InfoCard card = InfoCard.create(
                 user, CardType.KNOWLEDGE, "title", "summary", "body",
                 "captures/1/uuid.jpg", "extracted", null);
 
-        card.updateBody("수정된 본문");
+        card.update("수정된 제목", "수정된 요약", "수정된 본문", CardType.CONTENT);
 
+        assertThat(card.getTitle()).isEqualTo("수정된 제목");
+        assertThat(card.getSummary()).isEqualTo("수정된 요약");
         assertThat(card.getBody()).isEqualTo("수정된 본문");
-        assertThat(card.isBodyEdited()).isTrue();
-        assertThat(card.getBodyEditedAt()).isNotNull();
+        assertThat(card.getType()).isEqualTo(CardType.CONTENT);
+        assertThat(card.isEdited()).isTrue();
+        assertThat(card.getEditedAt()).isNotNull();
     }
 
     @Test
-    @DisplayName("updateBody는 1000자를 초과하면 예외를 던진다")
-    void updateBody는_1000자를_초과하면_예외를_던진다() {
+    @DisplayName("update는 title이 빈 값이면 예외를 던진다")
+    void update는_title이_빈_값이면_예외를_던진다() {
         InfoCard card = InfoCard.create(
                 user, CardType.KNOWLEDGE, "title", "summary", "body",
                 "captures/1/uuid.jpg", "extracted", null);
-        String tooLongBody = "가".repeat(InfoCard.BODY_MAX_LENGTH + 1);
 
-        assertThatThrownBy(() -> card.updateBody(tooLongBody))
+        assertThatThrownBy(() -> card.update("", "summary", "body", CardType.KNOWLEDGE))
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.INVALID_INPUT);
     }
 
     @Test
-    @DisplayName("updateBody는 null을 허용한다")
-    void updateBody는_null을_허용한다() {
+    @DisplayName("update는 summary가 null이면 허용한다")
+    void update는_summary가_null이면_허용한다() {
         InfoCard card = InfoCard.create(
                 user, CardType.KNOWLEDGE, "title", "summary", "body",
                 "captures/1/uuid.jpg", "extracted", null);
 
-        card.updateBody(null);
+        card.update("title", null, "body", CardType.KNOWLEDGE);
 
-        assertThat(card.getBody()).isNull();
-        assertThat(card.isBodyEdited()).isTrue();
+        assertThat(card.getSummary()).isNull();
     }
 
     @Test
-    @DisplayName("updateBody는 공백을 허용한다")
-    void updateBody는_공백을_허용한다() {
+    @DisplayName("update는 summary가 80자를 초과하면 예외를 던진다")
+    void update는_summary가_80자를_초과하면_예외를_던진다() {
+        InfoCard card = InfoCard.create(
+                user, CardType.KNOWLEDGE, "title", "summary", "body",
+                "captures/1/uuid.jpg", "extracted", null);
+        String tooLongSummary = "가".repeat(InfoCard.SUMMARY_MAX_LENGTH + 1);
+
+        assertThatThrownBy(() -> card.update("title", tooLongSummary, "body", CardType.KNOWLEDGE))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_INPUT);
+    }
+
+    @Test
+    @DisplayName("update는 body가 null이면 허용한다")
+    void update는_body가_null이면_허용한다() {
         InfoCard card = InfoCard.create(
                 user, CardType.KNOWLEDGE, "title", "summary", "body",
                 "captures/1/uuid.jpg", "extracted", null);
 
-        card.updateBody("   ");
+        card.update("title", "summary", null, CardType.KNOWLEDGE);
 
-        assertThat(card.getBody()).isEqualTo("   ");
-        assertThat(card.isBodyEdited()).isTrue();
+        assertThat(card.getBody()).isNull();
+    }
+
+    @Test
+    @DisplayName("update는 body가 1000자를 초과하면 예외를 던진다")
+    void update는_body가_1000자를_초과하면_예외를_던진다() {
+        InfoCard card = InfoCard.create(
+                user, CardType.KNOWLEDGE, "title", "summary", "body",
+                "captures/1/uuid.jpg", "extracted", null);
+        String tooLongBody = "가".repeat(InfoCard.BODY_MAX_LENGTH + 1);
+
+        assertThatThrownBy(() -> card.update("title", "summary", tooLongBody, CardType.KNOWLEDGE))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_INPUT);
+    }
+
+    @Test
+    @DisplayName("update는 cardType이 null이면 예외를 던진다")
+    void update는_cardType이_null이면_예외를_던진다() {
+        InfoCard card = InfoCard.create(
+                user, CardType.KNOWLEDGE, "title", "summary", "body",
+                "captures/1/uuid.jpg", "extracted", null);
+
+        assertThatThrownBy(() -> card.update("title", "summary", "body", null))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_INPUT);
+    }
+
+    @Test
+    @DisplayName("update는 cardType을 ETC로 자유롭게 재분류할 수 있다")
+    void update는_cardType을_ETC로_자유롭게_재분류할_수_있다() {
+        InfoCard card = InfoCard.create(
+                user, CardType.KNOWLEDGE, "title", "summary", "body",
+                "captures/1/uuid.jpg", "extracted", null);
+
+        card.update("title", "summary", "body", CardType.ETC);
+
+        assertThat(card.getType()).isEqualTo(CardType.ETC);
     }
 }

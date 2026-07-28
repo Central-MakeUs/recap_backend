@@ -1,6 +1,7 @@
 package cmc.recap.card.service;
 
 import cmc.recap.card.domain.InfoCard;
+import cmc.recap.card.dto.request.CaptureUpdateRequest;
 import cmc.recap.card.dto.response.CaptureDetailResponse;
 import cmc.recap.card.dto.response.UploadUrlsResponse;
 import cmc.recap.card.dto.response.UploadUrlsResponse.UploadItem;
@@ -107,9 +108,9 @@ public class CaptureService {
     }
 
     @Transactional
-    public void updateBody(Long userId, Long captureId, String body) {
+    public void update(Long userId, Long captureId, CaptureUpdateRequest request) {
         InfoCard card = getOwnedCard(userId, captureId);
-        card.updateBody(body);
+        card.update(request.title(), request.summary(), request.body(), request.cardType());
     }
 
     @Transactional

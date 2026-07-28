@@ -73,11 +73,11 @@ public class InfoCard extends BaseTimeEntity {
     @Column(name = "favorited_at")
     private Instant favoritedAt;
 
-    @Column(name = "body_edited", nullable = false)
-    private boolean bodyEdited;
+    @Column(name = "edited", nullable = false)
+    private boolean edited;
 
-    @Column(name = "body_edited_at")
-    private Instant bodyEditedAt;
+    @Column(name = "edited_at")
+    private Instant editedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organize_batch_id")
@@ -115,11 +115,19 @@ public class InfoCard extends BaseTimeEntity {
         this.originalImageKey = null;
     }
 
-    public void updateBody(String newBody) {
-        validateBody(newBody);
-        this.body = newBody;
-        this.bodyEdited = true;
-        this.bodyEditedAt = Instant.now();
+    public void update(String title, String summary, String body, CardType cardType) {
+        validateTitle(title);
+        validateSummaryLength(summary);
+        validateBody(body);
+        if (cardType == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "유형은 필수입니다.");
+        }
+        this.title = title;
+        this.summary = summary;
+        this.body = body;
+        this.type = cardType;
+        this.edited = true;
+        this.editedAt = Instant.now();
     }
 
     private static void validateTitle(String title) {
@@ -128,6 +136,12 @@ public class InfoCard extends BaseTimeEntity {
         }
         if (title.length() > TITLE_MAX_LENGTH) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "제목은 " + TITLE_MAX_LENGTH + "자를 초과할 수 없습니다.");
+        }
+    }
+
+    private static void validateSummaryLength(String summary) {
+        if (summary != null && summary.length() > SUMMARY_MAX_LENGTH) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "요약은 " + SUMMARY_MAX_LENGTH + "자를 초과할 수 없습니다.");
         }
     }
 
