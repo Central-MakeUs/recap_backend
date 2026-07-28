@@ -4,6 +4,7 @@ import cmc.recap.global.dto.ApiResponse;
 import cmc.recap.global.exception.ApiErrorCodes;
 import cmc.recap.global.exception.ErrorCode;
 import cmc.recap.user.dto.response.AccountInfoResponse;
+import cmc.recap.user.dto.response.ConsentStatusResponse;
 import cmc.recap.user.dto.response.DataSummaryResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,4 +43,20 @@ public interface UserApiDocs {
     @io.swagger.v3.oas.annotations.responses.ApiResponses(
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "삭제 성공"))
     ResponseEntity<Void> deleteAccountData(@Parameter(hidden = true) @AuthenticationPrincipal Long userId);
+
+    @Operation(summary = "AI 분석 전송 동의 상태 조회")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"))
+    ResponseEntity<ApiResponse<ConsentStatusResponse>> getConsentStatus(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId);
+
+    @Operation(summary = "AI 분석 전송 동의")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "동의 처리 성공"))
+    ResponseEntity<Void> giveConsent(@Parameter(hidden = true) @AuthenticationPrincipal Long userId);
+
+    @Operation(summary = "AI 분석 전송 동의 철회")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "철회 처리 성공"))
+    ResponseEntity<Void> withdrawConsent(@Parameter(hidden = true) @AuthenticationPrincipal Long userId);
 }
