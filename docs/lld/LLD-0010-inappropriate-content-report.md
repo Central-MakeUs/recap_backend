@@ -4,9 +4,17 @@
 
 | 항목 | 값 |
 | --- | --- |
-| 상태 | Accepted |
-| 날짜 | 2026-07-28 |
+| 상태 | Accepted (개정) |
+| 날짜 | 2026-07-28, 1차 개정 2026-07-28 |
 | 관련 | [ADR-0015](../adr/ADR-0015-user-withdrawal-hybrid-deletion.md), [LLD-0005](LLD-0005-capture-detail-favorite-delete.md), [ADR-0010](../adr/ADR-0010-original-image-s3-storage.md) |
+
+## 개정 이력
+
+- 2026-07-28: 기획 확정 결과로 신고 사유 카테고리를 재구성.
+  `WRONG_TYPE`을 `INACCURATE_CONTENT`로 흡수, `SENSITIVE_INFO`
+  신규 추가. 카테고리와 별개로 자유 텍스트 보조 설명(`detail`,
+  최대 200자, 선택 입력) 필드 추가 — 카테고리 방식을 자유 텍스트로
+  대체하는 게 아니라, 선택 입력으로 보완하는 것.
 
 ## 맥락 (Context)
 
@@ -68,7 +76,10 @@ public class Report extends BaseTimeEntity {
     @Column(name = "reason", nullable = false)
     private ReportReason reason;
 
-    public static Report create(User user, InfoCard card, ReportReason reason) {
+    @Column(name = "detail", length = 200)
+    private String detail; // 선택 입력, "어떤 문제인지 알려주세요"
+
+    public static Report create(User user, InfoCard card, ReportReason reason, String detail) {
         Report report = new Report();
         report.user = user;
         report.captureId = card.getId();
@@ -76,6 +87,7 @@ public class Report extends BaseTimeEntity {
         report.title = card.getTitle();
         report.summary = card.getSummary();
         report.reason = reason;
+        report.detail = detail;
         return report;
     }
 }
@@ -93,20 +105,23 @@ public class Report extends BaseTimeEntity {
 짧은 주기로 확인하면 개별 사례까지 볼 여지가 있다**는 운영 권장
 사항으로만 남긴다(강제 아님).
 
-### `ReportReason`
+### `ReportReason` (기획 확정, 1차 개정 반영)
 
 ```java
 public enum ReportReason {
-    WRONG_TYPE,       // 유형 분류가 틀림
-    INCORRECT_INFO,   // 정보 자체가 틀림/부정확함
-    OFFENSIVE,        // 부적절한 내용
-    OTHER             // 기타
+    INACCURATE_CONTENT,      // 내용이 부정확해요 (기존 WRONG_TYPE 흡수)
+    INAPPROPRIATE_CONTENT,   // 부적절한 내용이 포함되었어요
+    SENSITIVE_INFO,          // 민감한 정보가 포함되었어요 (신규)
+    OTHER                    // 기타
 }
 ```
 
 카테고리 방식을 채택한다(자유 텍스트 아님) — 자유 텍스트는 나중에
 패턴을 뽑으려면 일일이 읽어야 하지만, 카테고리는 집계 쿼리 하나로
-"어떤 사유가 제일 많은지" 바로 확인 가능하다.
+"어떤 사유가 제일 많은지" 바로 확인 가능하다. 다만 카테고리만으로
+부족한 맥락을 보완하기 위해 선택 입력 `detail`(최대 200자)을 함께
+받는다 — 이건 집계용이 아니라 개별 신고 건을 팀이 직접 확인할 때
+참고하는 보조 정보다.
 
 ### 중복 신고 방지
 
@@ -123,8 +138,10 @@ POST /api/v1/captures/{captureId}/report
 **요청**
 
 ```json
-{ "reason": "WRONG_TYPE" }
+{ "reason": "INACCURATE_CONTENT", "detail": "가격 정보가 실제와 달라요" }
 ```
+
+`detail`은 선택 입력(null 허용), 최대 200자 초과 시 `INVALID_INPUT`(400).
 
 **응답**: `204 No Content`
 
@@ -138,6 +155,7 @@ POST /api/v1/captures/{captureId}/report
 | --- | --- | --- |
 | 존재하지 않거나 다른 유저 소유의 captureId | `NOT_FOUND` | 404 |
 | 이미 신고한 카드에 재신고 | `ALREADY_REPORTED`(신규) | 409 |
+| `detail`이 200자 초과 | `INVALID_INPUT`(기존 재사용) | 400 |
 
 ## 고려한 대안 (Considered Options)
 
@@ -168,7 +186,7 @@ POST /api/v1/captures/{captureId}/report
 ## 후속 / 미결정
 
 - [ ] 신고 데이터를 주기적으로 확인하는 프로세스(누가, 얼마나
-      자주)는 팀 운영 합의 필요
+  자주)는 팀 운영 합의 필요
 - [ ] Apple App Store 심사 가이드라인 1.2(UGC 신고 요구사항)가
-      RECAP처럼 비공개(본인만 보는) 콘텐츠에도 적용되는지 재확인
-      필요 — 적용 안 된다면 이 기능 자체의 우선순위 재검토 여지 있음
+  RECAP처럼 비공개(본인만 보는) 콘텐츠에도 적용되는지 재확인
+  필요 — 적용 안 된다면 이 기능 자체의 우선순위 재검토 여지 있음
