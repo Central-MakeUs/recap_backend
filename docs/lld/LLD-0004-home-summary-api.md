@@ -16,12 +16,18 @@
 
 ## 결정 (Decision)
 
+> **갱신 (2026-07-29)**: 즐겨찾기 미리보기 개수를 3개에서 4개로 변경.
+> `findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc`는
+> `findByUserAndFavoriteTrueOrderByFavoritedAtDesc(User, Pageable)`로
+> 대체하고 `HomeService.MAX_FAVORITES=4`로 페이지 크기를 지정한다.
+> recentCaptures(최근 정리된 캡처)는 3개로 유지.
+
 ### 응답 구조
 
 ```json
 {
   "recentCaptures": [ /* CaptureSummaryResponse 배열, 최대 3개 */ ],
-  "favorites": [ /* CaptureSummaryResponse 배열, 최대 3개 */ ],
+  "favorites": [ /* CaptureSummaryResponse 배열, 최대 4개 */ ],
   "topTypes": [
     { "typeCode": "SHOPPING", "count": 12, "representativeThumbnailUrl": "..." }
   ],
@@ -55,7 +61,7 @@ public record CaptureSummaryResponse(
 
 ```java
 List<InfoCard> findTop3ByUserOrderByCreatedAtDesc(User user); // 30일 필터는 서비스에서
-List<InfoCard> findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(User user);
+List<InfoCard> findByUserAndFavoriteTrueOrderByFavoritedAtDesc(User user, Pageable pageable); // MAX_FAVORITES=4
 boolean existsByUser(User user);
 
 // 유형별 개수 + 동점 판단(최근 정리 캡처 포함 유형 우선)용 group by
