@@ -22,13 +22,13 @@ public interface InfoCardRepository extends JpaRepository<InfoCard, Long> {
 
     List<InfoCard> findTop3ByUserOrderByCreatedAtDesc(User user);
 
-    List<InfoCard> findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(User user);
-
     boolean existsByUser(User user);
 
     long countByUser(User user);
 
     List<InfoCard> findByUserAndFavoriteTrueOrderByFavoritedAtDesc(User user);
+
+    List<InfoCard> findByUserAndFavoriteTrueOrderByFavoritedAtDesc(User user, Pageable pageable);
 
     List<InfoCard> findByUserAndType(User user, CardType type, Sort sort);
 

@@ -28,6 +28,7 @@ public class HomeService {
 
     private static final int RECENT_DAYS = 30;
     private static final int MAX_TOP_TYPES = 4;
+    private static final int MAX_FAVORITES = 4;
 
     private final UserRepository userRepository;
     private final InfoCardRepository infoCardRepository;
@@ -38,7 +39,7 @@ public class HomeService {
 
         List<CaptureSummaryResponse> recentCaptures = getRecentCaptures(user);
         List<CaptureSummaryResponse> favorites = infoCardRepository
-                .findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(user).stream()
+                .findByUserAndFavoriteTrueOrderByFavoritedAtDesc(user, PageRequest.of(0, MAX_FAVORITES)).stream()
                 .map(this::toCaptureSummary)
                 .toList();
         List<TopTypeResponse> topTypes = getTopTypes(user);

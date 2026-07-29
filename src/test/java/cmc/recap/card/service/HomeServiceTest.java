@@ -65,7 +65,7 @@ class HomeServiceTest {
         InfoCard recent = cardWithId(1L, user, CardType.JOB, Instant.now());
         InfoCard old = cardWithId(2L, user, CardType.JOB, Instant.now().minus(31, ChronoUnit.DAYS));
         given(infoCardRepository.findTop3ByUserOrderByCreatedAtDesc(any())).willReturn(List.of(recent, old));
-        given(infoCardRepository.findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(any())).willReturn(List.of());
+        given(infoCardRepository.findByUserAndFavoriteTrueOrderByFavoritedAtDesc(any(), any())).willReturn(List.of());
         given(infoCardRepository.countByTypeExcludingEtc(any(), eq(CardType.ETC))).willReturn(List.of());
         given(infoCardRepository.existsByUser(any())).willReturn(true);
 
@@ -83,7 +83,7 @@ class HomeServiceTest {
                 cardWithId(2L, user, CardType.JOB, Instant.now()),
                 cardWithId(3L, user, CardType.JOB, Instant.now()));
         given(infoCardRepository.findTop3ByUserOrderByCreatedAtDesc(any())).willReturn(cards);
-        given(infoCardRepository.findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(any())).willReturn(List.of());
+        given(infoCardRepository.findByUserAndFavoriteTrueOrderByFavoritedAtDesc(any(), any())).willReturn(List.of());
         given(infoCardRepository.countByTypeExcludingEtc(any(), eq(CardType.ETC))).willReturn(List.of());
         given(infoCardRepository.existsByUser(any())).willReturn(true);
 
@@ -99,7 +99,7 @@ class HomeServiceTest {
         InfoCard newerFavorite = cardWithId(1L, user, CardType.JOB, Instant.now());
         InfoCard olderFavorite = cardWithId(2L, user, CardType.JOB, Instant.now());
         given(infoCardRepository.findTop3ByUserOrderByCreatedAtDesc(any())).willReturn(List.of());
-        given(infoCardRepository.findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(any()))
+        given(infoCardRepository.findByUserAndFavoriteTrueOrderByFavoritedAtDesc(any(), any()))
                 .willReturn(List.of(newerFavorite, olderFavorite));
         given(infoCardRepository.countByTypeExcludingEtc(any(), eq(CardType.ETC))).willReturn(List.of());
         given(infoCardRepository.existsByUser(any())).willReturn(true);
@@ -116,7 +116,7 @@ class HomeServiceTest {
         InfoCard expired = cardWithId(1L, user, CardType.JOB, Instant.now());
         expired.expireOriginalImage();
         given(infoCardRepository.findTop3ByUserOrderByCreatedAtDesc(any())).willReturn(List.of());
-        given(infoCardRepository.findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(any()))
+        given(infoCardRepository.findByUserAndFavoriteTrueOrderByFavoritedAtDesc(any(), any()))
                 .willReturn(List.of(expired));
         given(infoCardRepository.countByTypeExcludingEtc(any(), eq(CardType.ETC))).willReturn(List.of());
         given(infoCardRepository.existsByUser(any())).willReturn(true);
@@ -128,10 +128,31 @@ class HomeServiceTest {
     }
 
     @Test
+    @DisplayName("favorites는 즐겨찾기가 5개여도 최대 4개까지만 반환한다")
+    void favorites는_즐겨찾기가_5개여도_최대_4개까지만_반환한다() {
+        User user = userWithId(1L);
+        List<InfoCard> favoritesPage = List.of(
+                cardWithId(1L, user, CardType.JOB, Instant.now()),
+                cardWithId(2L, user, CardType.JOB, Instant.now()),
+                cardWithId(3L, user, CardType.JOB, Instant.now()),
+                cardWithId(4L, user, CardType.JOB, Instant.now()));
+        given(infoCardRepository.findTop3ByUserOrderByCreatedAtDesc(any())).willReturn(List.of());
+        given(infoCardRepository.findByUserAndFavoriteTrueOrderByFavoritedAtDesc(
+                any(), eq(PageRequest.of(0, 4)))).willReturn(favoritesPage);
+        given(infoCardRepository.countByTypeExcludingEtc(any(), eq(CardType.ETC))).willReturn(List.of());
+        given(infoCardRepository.existsByUser(any())).willReturn(true);
+
+        HomeSummaryResponse response = homeService.getSummary(1L);
+
+        assertThat(response.favorites()).hasSize(4);
+        verify(infoCardRepository).findByUserAndFavoriteTrueOrderByFavoritedAtDesc(any(), eq(PageRequest.of(0, 4)));
+    }
+
+    @Test
     @DisplayName("topTypes는 리포지토리 조회 시 ETC를 제외 조건으로 전달한다")
     void topTypes는_리포지토리_조회_시_ETC를_제외_조건으로_전달한다() {
         given(infoCardRepository.findTop3ByUserOrderByCreatedAtDesc(any())).willReturn(List.of());
-        given(infoCardRepository.findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(any())).willReturn(List.of());
+        given(infoCardRepository.findByUserAndFavoriteTrueOrderByFavoritedAtDesc(any(), any())).willReturn(List.of());
         given(infoCardRepository.countByTypeExcludingEtc(any(), any())).willReturn(List.of());
         given(infoCardRepository.existsByUser(any())).willReturn(true);
 
@@ -147,7 +168,7 @@ class HomeServiceTest {
         TypeCountProjection tiedButRecent = projection(CardType.SHOPPING, 2L, Instant.now());
         TypeCountProjection tiedButOlder = projection(CardType.PLACE, 2L, Instant.now().minus(1, ChronoUnit.DAYS));
         given(infoCardRepository.findTop3ByUserOrderByCreatedAtDesc(any())).willReturn(List.of());
-        given(infoCardRepository.findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(any())).willReturn(List.of());
+        given(infoCardRepository.findByUserAndFavoriteTrueOrderByFavoritedAtDesc(any(), any())).willReturn(List.of());
         given(infoCardRepository.countByTypeExcludingEtc(any(), eq(CardType.ETC)))
                 .willReturn(List.of(tiedButRecent, tiedButOlder));
         given(infoCardRepository.findFirstByUserAndTypeOrderByCreatedAtDesc(any(), eq(CardType.SHOPPING)))
@@ -172,7 +193,7 @@ class HomeServiceTest {
                 projection(CardType.SCHEDULE, 2L, Instant.now()),
                 projection(CardType.KNOWLEDGE, 1L, Instant.now()));
         given(infoCardRepository.findTop3ByUserOrderByCreatedAtDesc(any())).willReturn(List.of());
-        given(infoCardRepository.findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(any())).willReturn(List.of());
+        given(infoCardRepository.findByUserAndFavoriteTrueOrderByFavoritedAtDesc(any(), any())).willReturn(List.of());
         given(infoCardRepository.countByTypeExcludingEtc(any(), eq(CardType.ETC))).willReturn(projections);
         given(infoCardRepository.findFirstByUserAndTypeOrderByCreatedAtDesc(any(), any()))
                 .willReturn(Optional.of(cardWithId(1L, user, CardType.SHOPPING, Instant.now())));
@@ -189,7 +210,7 @@ class HomeServiceTest {
     @DisplayName("hasAnyCapture는 캡처가 0개면 false를 반환한다")
     void hasAnyCapture는_캡처가_0개면_false를_반환한다() {
         given(infoCardRepository.findTop3ByUserOrderByCreatedAtDesc(any())).willReturn(List.of());
-        given(infoCardRepository.findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(any())).willReturn(List.of());
+        given(infoCardRepository.findByUserAndFavoriteTrueOrderByFavoritedAtDesc(any(), any())).willReturn(List.of());
         given(infoCardRepository.countByTypeExcludingEtc(any(), eq(CardType.ETC))).willReturn(List.of());
         given(infoCardRepository.existsByUser(any())).willReturn(false);
 
@@ -202,7 +223,7 @@ class HomeServiceTest {
     @DisplayName("hasAnyCapture는 캡처가 1개 이상이면 true를 반환한다")
     void hasAnyCapture는_캡처가_1개_이상이면_true를_반환한다() {
         given(infoCardRepository.findTop3ByUserOrderByCreatedAtDesc(any())).willReturn(List.of());
-        given(infoCardRepository.findTop3ByUserAndFavoriteTrueOrderByFavoritedAtDesc(any())).willReturn(List.of());
+        given(infoCardRepository.findByUserAndFavoriteTrueOrderByFavoritedAtDesc(any(), any())).willReturn(List.of());
         given(infoCardRepository.countByTypeExcludingEtc(any(), eq(CardType.ETC))).willReturn(List.of());
         given(infoCardRepository.existsByUser(any())).willReturn(true);
 
