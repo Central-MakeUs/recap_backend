@@ -13,6 +13,7 @@ import cmc.recap.card.domain.InfoCard;
 import cmc.recap.card.repository.InfoCardRepository;
 import cmc.recap.global.exception.ErrorCode;
 import cmc.recap.global.exception.model.BusinessException;
+import cmc.recap.report.repository.ReportRepository;
 import cmc.recap.user.domain.Platform;
 import cmc.recap.user.domain.User;
 import cmc.recap.user.dto.response.AccountInfoResponse;
@@ -45,6 +46,8 @@ class UserServiceTest {
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
     @Mock
+    private ReportRepository reportRepository;
+    @Mock
     private S3Client s3Client;
 
     private UserService userService;
@@ -52,7 +55,7 @@ class UserServiceTest {
     @BeforeEach
     void setUp() {
         userService = new UserService(
-                userRepository, infoCardRepository, refreshTokenRepository, s3Client, BUCKET_NAME);
+                userRepository, infoCardRepository, refreshTokenRepository, reportRepository, s3Client, BUCKET_NAME);
     }
 
     @Test
@@ -77,6 +80,7 @@ class UserServiceTest {
                 .containsExactly("captures/1/a.jpg");
         verify(infoCardRepository).deleteAll(List.of(card));
         verify(refreshTokenRepository).deleteByUser(user);
+        verify(reportRepository).deleteByUser(user);
 
         assertThat(user.isWithdrawn()).isTrue();
         assertThat(user.getDeviceId()).startsWith("WITHDRAWN-").isNotEqualTo(originalDeviceId);
