@@ -5,6 +5,7 @@ import cmc.recap.card.domain.InfoCard;
 import cmc.recap.card.repository.InfoCardRepository;
 import cmc.recap.global.exception.ErrorCode;
 import cmc.recap.global.exception.model.BusinessException;
+import cmc.recap.report.repository.ReportRepository;
 import cmc.recap.user.domain.User;
 import cmc.recap.user.dto.response.AccountInfoResponse;
 import cmc.recap.user.dto.response.DataSummaryResponse;
@@ -28,6 +29,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final InfoCardRepository infoCardRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ReportRepository reportRepository;
     private final S3Client s3Client;
     private final String bucketName;
 
@@ -35,11 +37,13 @@ public class UserService {
             UserRepository userRepository,
             InfoCardRepository infoCardRepository,
             RefreshTokenRepository refreshTokenRepository,
+            ReportRepository reportRepository,
             S3Client s3Client,
             @Value("${aws.s3.bucket-name}") String bucketName) {
         this.userRepository = userRepository;
         this.infoCardRepository = infoCardRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.reportRepository = reportRepository;
         this.s3Client = s3Client;
         this.bucketName = bucketName;
     }
@@ -49,6 +53,7 @@ public class UserService {
         User user = getUser(userId);
         deleteAllCaptures(user);
         refreshTokenRepository.deleteByUser(user);
+        reportRepository.deleteByUser(user);
         user.withdraw();
     }
 
