@@ -29,3 +29,4 @@
 | [LLD-0016](LLD-0016-ai-consent-management.md) | AI 분석 전송 동의 관리              | Accepted | 2026-07-29                 |
 | [LLD-0017](LLD-0017-capture-full-update.md) | 정보카드 전체 필드 수정 API          | Accepted | 2026-07-29                 |
 | [LLD-0018](LLD-0018-app-version-check.md) | 앱 버전 체크 API                  | Accepted | 2026-07-29                 |
+| [LLD-0019](LLD-0019-report-retention-policy.md) | 신고 데이터 보관 기간 정책             | Accepted | 2026-07-31                 |
