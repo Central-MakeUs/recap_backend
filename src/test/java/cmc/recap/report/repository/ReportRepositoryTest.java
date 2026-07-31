@@ -37,7 +37,7 @@ class ReportRepositoryTest {
     @DisplayName("deleteByCreatedAtBefore는 cutoff보다 오래된 신고만 삭제하고 이내 신고는 남긴다")
     void deleteByCreatedAtBefore는_cutoff보다_오래된_신고만_삭제하고_이내_신고는_남긴다() {
         User user = userRepository.save(User.createByDevice("device-1", Platform.IOS));
-        Instant cutoff = Instant.now();
+        Instant cutoff = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
         Report old = reportRepository.save(reportOf(user, 1L));
         Report boundary = reportRepository.save(reportOf(user, 2L));
