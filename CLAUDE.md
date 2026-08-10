@@ -14,6 +14,8 @@
     "요청받지 않은 유연성"이 아니라 팀이 이미 결정한 요청으로 간주하고 임의로 단순화하지 않는다.
 - 코드 구현은 .agents/skills/implement/SKILL.md 스킬, 커밋 전 검수는 .agents/skills/review/SKILL.md 스킬을 따른다.
 - 엔티티/도메인 객체는 docs/conventions/domain-design-principles.md를 따른다.
+- EC2 서버 원격 접근이 필요한 작업(로그 확인, 인프라 설정 변경 등)
+    시 docs/deploy/ec2-access-policy.md를 먼저 읽고 그 규칙을 따를 것.
 
 ## 코드 규칙
 - JPA AttributeConverter/EntityListener에 생성자 DI 금지 (ADR-0005)
