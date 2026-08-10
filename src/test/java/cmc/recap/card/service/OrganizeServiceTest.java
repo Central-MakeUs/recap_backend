@@ -193,6 +193,20 @@ class OrganizeServiceTest {
     }
 
     @Test
+    @DisplayName("동의한 유저가 organize를 요청하면 정상적으로 다른 검증(소유권 확인)을 수행한다")
+    void 동의한_유저가_organize를_요청하면_정상적으로_다른_검증을_수행한다() {
+        given(consentService.hasActiveConsent(1L)).willReturn(true);
+        List<String> imageKeys = List.of("captures/1/a.jpg", "captures/2/b.jpg");
+
+        assertThatThrownBy(() -> organizeService.organize(1L, imageKeys))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_INPUT);
+
+        verify(consentService).hasActiveConsent(1L);
+    }
+
+    @Test
     @DisplayName("completeImage는 배치를 락 조회해서 InfoCard를 저장하고 성공을 기록한다")
     void completeImage는_배치를_락_조회해서_InfoCard를_저장하고_성공을_기록한다() {
         User user = User.createByDevice("device-1", Platform.IOS);
