@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,7 +30,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain
     ) throws ServletException, IOException {
         extractToken(request).ifPresent(this::authenticate);
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            MDC.clear();
+        }
     }
 
     private Optional<String> extractToken(HttpServletRequest request) {
@@ -46,6 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Authentication authentication =
                     new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            MDC.put("userId", String.valueOf(userId));
         } catch (JwtException | IllegalArgumentException e) {
             // 유효하지 않거나 만료된 토큰 — 인증을 설정하지 않고 넘어간다.
             // 보호된 엔드포인트라면 이후 인가 단계에서 SecurityConfig의
