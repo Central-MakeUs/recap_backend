@@ -2,6 +2,7 @@ package cmc.recap.global.jwt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willAnswer;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 
@@ -9,6 +10,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.MDC;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -90,5 +93,32 @@ class JwtAuthenticationFilterTest {
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    @DisplayName("유효한 토큰으로 필터를 통과하면 filterChain 호출 시점에 MDC에 userId가 설정된다")
+    void 유효한_토큰으로_필터를_통과하면_filterChain_호출_시점에_MDC에_userId가_설정된다() throws Exception {
+        given(request.getHeader("Authorization")).willReturn("Bearer valid-token");
+        given(jwtProvider.getUserId("valid-token")).willReturn(1L);
+        AtomicReference<String> capturedUserId = new AtomicReference<>();
+        willAnswer(invocation -> {
+            capturedUserId.set(MDC.get("userId"));
+            return null;
+        }).given(filterChain).doFilter(request, response);
+
+        filter.doFilter(request, response, filterChain);
+
+        assertThat(capturedUserId.get()).isEqualTo("1");
+    }
+
+    @Test
+    @DisplayName("필터 처리가 끝나면 MDC의 userId가 정리된다")
+    void 필터_처리가_끝나면_MDC의_userId가_정리된다() throws Exception {
+        given(request.getHeader("Authorization")).willReturn("Bearer valid-token");
+        given(jwtProvider.getUserId("valid-token")).willReturn(1L);
+
+        filter.doFilter(request, response, filterChain);
+
+        assertThat(MDC.get("userId")).isNull();
     }
 }
