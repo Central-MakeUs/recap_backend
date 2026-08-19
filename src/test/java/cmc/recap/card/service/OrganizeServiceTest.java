@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -22,6 +23,7 @@ import cmc.recap.user.domain.Platform;
 import cmc.recap.user.domain.User;
 import cmc.recap.user.repository.UserRepository;
 import cmc.recap.user.service.ConsentService;
+import cmc.recap.user.service.UsageService;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -53,6 +55,8 @@ class OrganizeServiceTest {
     @Mock
     private ConsentService consentService;
     @Mock
+    private UsageService usageService;
+    @Mock
     private S3Client s3Client;
 
     private OrganizeService organizeService;
@@ -61,7 +65,7 @@ class OrganizeServiceTest {
     void setUp() {
         organizeService = new OrganizeService(
                 userRepository, organizeBatchRepository, infoCardRepository, imageAnalysisTaskRunner,
-                consentService, s3Client, BUCKET_NAME);
+                consentService, usageService, s3Client, BUCKET_NAME);
     }
 
     @Test
@@ -175,6 +179,23 @@ class OrganizeServiceTest {
         assertThat(response.status()).isEqualTo(BatchStatus.PROCESSING);
         verify(imageAnalysisTaskRunner).analyzeAndSave(response.batchId(), "captures/1/a.jpg");
         verify(imageAnalysisTaskRunner).analyzeAndSave(response.batchId(), "captures/1/b.jpg");
+        verify(usageService).checkLimit(1L, 2);
+    }
+
+    @Test
+    @DisplayName("월 사용량 한도를 초과하면 MONTHLY_USAGE_LIMIT_EXCEEDED를 던지고 소유권 검증과 배치 생성은 수행하지 않는다")
+    void 월_사용량_한도를_초과하면_MONTHLY_USAGE_LIMIT_EXCEEDED를_던지고_소유권_검증과_배치_생성은_수행하지_않는다() {
+        given(consentService.hasActiveConsent(1L)).willReturn(true);
+        willThrow(new BusinessException(ErrorCode.MONTHLY_USAGE_LIMIT_EXCEEDED))
+                .given(usageService).checkLimit(1L, 1);
+        List<String> imageKeys = List.of("captures/2/a.jpg");
+
+        assertThatThrownBy(() -> organizeService.organize(1L, imageKeys))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.MONTHLY_USAGE_LIMIT_EXCEEDED);
+
+        verify(organizeBatchRepository, never()).save(any());
     }
 
     @Test
