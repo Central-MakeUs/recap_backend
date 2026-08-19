@@ -31,3 +31,4 @@
 | [LLD-0018](LLD-0018-app-version-check.md) | 앱 버전 체크 API                  | Accepted | 2026-07-29                 |
 | [LLD-0019](LLD-0019-report-retention-policy.md) | 신고 데이터 보관 기간 정책             | Accepted | 2026-07-31                 |
 | [LLD-0020](LLD-0020-mdc-userid-logging.md) | MDC 기반 userId 로그 태깅            | Accepted | 2026-08-11                 |
+| [LLD-0021](LLD-0021-monthly-usage-limit.md) | 월간 AI 분석 사용량 제한             | Accepted | 2026-08-12                 |
