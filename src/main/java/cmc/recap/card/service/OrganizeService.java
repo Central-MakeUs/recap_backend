@@ -15,6 +15,7 @@ import cmc.recap.global.exception.model.BusinessException;
 import cmc.recap.user.domain.User;
 import cmc.recap.user.repository.UserRepository;
 import cmc.recap.user.service.ConsentService;
+import cmc.recap.user.service.UsageService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ public class OrganizeService {
     private final InfoCardRepository infoCardRepository;
     private final ImageAnalysisTaskRunner imageAnalysisTaskRunner;
     private final ConsentService consentService;
+    private final UsageService usageService;
     private final S3Client s3Client;
     private final String bucketName;
 
@@ -52,6 +54,7 @@ public class OrganizeService {
             InfoCardRepository infoCardRepository,
             ImageAnalysisTaskRunner imageAnalysisTaskRunner,
             ConsentService consentService,
+            UsageService usageService,
             S3Client s3Client,
             @Value("${aws.s3.bucket-name}") String bucketName) {
         this.userRepository = userRepository;
@@ -59,6 +62,7 @@ public class OrganizeService {
         this.infoCardRepository = infoCardRepository;
         this.imageAnalysisTaskRunner = imageAnalysisTaskRunner;
         this.consentService = consentService;
+        this.usageService = usageService;
         this.s3Client = s3Client;
         this.bucketName = bucketName;
     }
@@ -67,7 +71,9 @@ public class OrganizeService {
         if (!consentService.hasActiveConsent(userId)) {
             throw new BusinessException(ErrorCode.AI_CONSENT_REQUIRED);
         }
-        validateImageKeys(userId, imageKeys);
+        validateImageCount(imageKeys);
+        usageService.checkLimit(userId, imageKeys.size());
+        validateOwnership(userId, imageKeys);
         User user = userRepository.getReferenceById(userId);
         if (organizeBatchRepository.existsByUserAndStatus(user, BatchStatus.PROCESSING)) {
             throw new BusinessException(ErrorCode.ORGANIZE_IN_PROGRESS);
@@ -182,10 +188,13 @@ public class OrganizeService {
         }
     }
 
-    private void validateImageKeys(Long userId, List<String> imageKeys) {
+    private void validateImageCount(List<String> imageKeys) {
         if (imageKeys.size() > MAX_IMAGE_COUNT) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "imageKeys는 " + MAX_IMAGE_COUNT + "장을 초과할 수 없습니다.");
         }
+    }
+
+    private void validateOwnership(Long userId, List<String> imageKeys) {
         boolean hasOtherUsersKey = imageKeys.stream()
                 .anyMatch(imageKey -> !CaptureObjectKeyGenerator.belongsTo(imageKey, userId));
         if (hasOtherUsersKey) {
