@@ -12,7 +12,9 @@ import cmc.recap.global.jwt.JwtProvider;
 import cmc.recap.user.dto.response.AccountInfoResponse;
 import cmc.recap.user.dto.response.ConsentStatusResponse;
 import cmc.recap.user.dto.response.DataSummaryResponse;
+import cmc.recap.user.dto.response.UsageResponse;
 import cmc.recap.user.service.ConsentService;
+import cmc.recap.user.service.UsageService;
 import cmc.recap.user.service.UserService;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +42,9 @@ class UserControllerTest {
 
     @MockitoBean
     private ConsentService consentService;
+
+    @MockitoBean
+    private UsageService usageService;
 
     private String accessToken;
 
@@ -175,6 +180,28 @@ class UserControllerTest {
     @DisplayName("인증 없이 동의 철회를 요청하면 401을 응답한다")
     void 인증_없이_동의_철회를_요청하면_401을_응답한다() throws Exception {
         mockMvc.perform(delete("/api/v1/users/me/consent"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error.code").value("OAUTH_VERIFICATION_FAILED"));
+    }
+
+    @Test
+    @DisplayName("이번 달 사용량을 조회하면 사용량 정보를 응답한다")
+    void 이번_달_사용량을_조회하면_사용량_정보를_응답한다() throws Exception {
+        Instant resetAt = Instant.parse("2026-09-01T00:00:00Z");
+        given(usageService.getUsage(1L)).willReturn(UsageResponse.of(18, 20, resetAt));
+
+        mockMvc.perform(get("/api/v1/users/me/usage")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.usedCount").value(18))
+                .andExpect(jsonPath("$.data.limit").value(20))
+                .andExpect(jsonPath("$.data.remaining").value(2));
+    }
+
+    @Test
+    @DisplayName("인증 없이 사용량을 조회하면 401을 응답한다")
+    void 인증_없이_사용량을_조회하면_401을_응답한다() throws Exception {
+        mockMvc.perform(get("/api/v1/users/me/usage"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error.code").value("OAUTH_VERIFICATION_FAILED"));
     }

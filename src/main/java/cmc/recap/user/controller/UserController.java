@@ -4,7 +4,9 @@ import cmc.recap.global.dto.ApiResponse;
 import cmc.recap.user.dto.response.AccountInfoResponse;
 import cmc.recap.user.dto.response.ConsentStatusResponse;
 import cmc.recap.user.dto.response.DataSummaryResponse;
+import cmc.recap.user.dto.response.UsageResponse;
 import cmc.recap.user.service.ConsentService;
+import cmc.recap.user.service.UsageService;
 import cmc.recap.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ public class UserController implements UserApiDocs {
 
     private final UserService userService;
     private final ConsentService consentService;
+    private final UsageService usageService;
 
     @DeleteMapping("/me")
     @Override
@@ -67,5 +70,11 @@ public class UserController implements UserApiDocs {
     public ResponseEntity<Void> withdrawConsent(@AuthenticationPrincipal Long userId) {
         consentService.withdraw(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/me/usage")
+    @Override
+    public ResponseEntity<ApiResponse<UsageResponse>> getUsage(@AuthenticationPrincipal Long userId) {
+        return ResponseEntity.ok(ApiResponse.success(usageService.getUsage(userId)));
     }
 }

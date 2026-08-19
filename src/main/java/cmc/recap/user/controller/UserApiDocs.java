@@ -6,6 +6,7 @@ import cmc.recap.global.exception.ErrorCode;
 import cmc.recap.user.dto.response.AccountInfoResponse;
 import cmc.recap.user.dto.response.ConsentStatusResponse;
 import cmc.recap.user.dto.response.DataSummaryResponse;
+import cmc.recap.user.dto.response.UsageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -59,4 +60,10 @@ public interface UserApiDocs {
     @io.swagger.v3.oas.annotations.responses.ApiResponses(
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "철회 처리 성공"))
     ResponseEntity<Void> withdrawConsent(@Parameter(hidden = true) @AuthenticationPrincipal Long userId);
+
+    @Operation(summary = "이번 달 AI 분석 사용량 조회")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"))
+    ResponseEntity<ApiResponse<UsageResponse>> getUsage(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId);
 }

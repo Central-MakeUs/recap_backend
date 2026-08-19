@@ -47,7 +47,10 @@ public enum ErrorCode {
     ALREADY_REPORTED(HttpStatus.CONFLICT, "이미 신고한 카드입니다"),
 
     // 동의 (403)
-    AI_CONSENT_REQUIRED(HttpStatus.FORBIDDEN, "AI 분석 전송에 동의하지 않았습니다")
+    AI_CONSENT_REQUIRED(HttpStatus.FORBIDDEN, "AI 분석 전송에 동의하지 않았습니다"),
+
+    // 사용량 제한 (429)
+    MONTHLY_USAGE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "이번 달 AI 분석 사용량을 초과했습니다")
     ;
 
     private final HttpStatus httpStatus;
