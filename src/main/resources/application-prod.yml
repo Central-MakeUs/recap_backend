@@ -58,8 +58,8 @@ gemini:
 
 app:
   ios:
-    minimum-version: ${IOS_MINIMUM_VERSION:1.0.0}
-    update-url: ${IOS_UPDATE_URL:}
+    minimum-version: ${IOS_MINIMUM_VERSION:1.2.1}
+    update-url: ${IOS_UPDATE_URL:https://apps.apple.com/app/recap-스크린샷-요약-정리/id6795902468}
   android:
     minimum-version: ${ANDROID_MINIMUM_VERSION:1.0.0}
     update-url: ${ANDROID_UPDATE_URL:}
