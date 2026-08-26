@@ -16,8 +16,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UsageService {
 
-    // 데모데이 임시 조치 2026-08-22, 데모 종료 후 20으로 되돌릴 것
-    private static final int MONTHLY_LIMIT = 1000;
+    private static final int MONTHLY_LIMIT = 20;
 
     private final UserRepository userRepository;
     private final InfoCardRepository infoCardRepository;
